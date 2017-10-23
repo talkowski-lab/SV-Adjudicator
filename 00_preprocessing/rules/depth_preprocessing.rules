@@ -1,0 +1,150 @@
+"""
+merge_assess.snake
+Matthew Stone <mstone5@mgh.harvard.edu>
+
+"""
+
+with open(config['idmap']) as idmapf:
+    idkeys = [line.strip().split() for line in idmapf]
+    ID_MAP = dict(idkeys)
+
+SOURCES = config['depth_sources']
+
+import pandas as pd
+
+BATCH_KEY = pd.read_table(config['batches'], dtype=str)
+
+with open(config['groups']) as glist:
+    GROUPS = [g.strip() for g in glist.readlines()]
+
+
+def raw_cnmops_allosomal(wildcards):
+    path = 'data/raw_beds/cnmops_XY/{0}/{0}.allosomes.cnMOPS.merged.{1}.bed'
+    return path.format(wildcards.sample, wildcards.svtype.lower())
+    
+rule standardize_cnmops:
+    """Use X/Y calls from sex split"""
+    input:
+        autosomal='data/raw_beds/cnmops/SFARI.519.cohort.bed.gz',
+        allosomal=raw_cnmops_allosomal,
+    output:
+        bed='std_beds/cnmops/{sample}.{svtype}.raw.bed'
+    params:
+        ssc=lambda wildcards: ID_MAP[wildcards.sample],
+        svtype=lambda wildcards: wildcards.svtype.lower()
+    shell:
+        """
+        zcat {input.autosomal} \
+            | fgrep {wildcards.sample} \
+            | fgrep {params.svtype} \
+            | awk -v OFS="\\t" '($1!="X" && $1!="Y") {{print $1, $2, $3, $3-$2, "1", "0", "0"}}' \
+            | cat - <(sed -e '/^#/d' {input.allosomal} | awk -v OFS="\\t" '{{print $1, $2, $3, $3-$2, 1, 0, 0}}') \
+            > {output};
+        """
+
+def raw_cnvnator_bed(wildcards):
+    path = 'data/raw_beds/cnvnator/{0}.{1}.win100.bp200.sort.bedpe'
+    return path.format(ID_MAP[wildcards.sample], wildcards.svtype.lower())
+
+rule standardize_cnvnator:
+    input:
+        raw_cnvnator_bed
+    output:
+        bed='std_beds/cnvnator/{sample}.{svtype}.raw.bed'
+    shell:
+        """
+        awk -v OFS="\\t" '{{print $1, $2+50, $5+50, $8, "0", "1", "0"}}' {input} > {output};
+        """
+
+def raw_genomestrip_bed(wildcards):
+    path = 'data/raw_beds/genomestrip/{0}.genomestrip.{1}.bed'
+    return path.format(ID_MAP[wildcards.sample], wildcards.svtype.lower())
+
+rule standardize_genomestrip:
+    input:
+        raw_genomestrip_bed
+    output:
+        bed='std_beds/genomestrip/{sample}.{svtype}.raw.bed'
+    shell:
+        """
+        awk -v OFS="\\t" '{{print $1, $2, $3, $4-$3, "0", "0", "1"}}' {input} > {output}
+        """
+
+rule concat_standardized_beds:
+    input:
+        rules.standardize_cnmops.output.bed,
+        rules.standardize_cnvnator.output.bed,
+        rules.standardize_genomestrip.output.bed,
+    output:
+        bed='std_beds/merged_algs/{sample}.{svtype}.raw.bed'
+    shell:
+        """
+        cat {input} | sort -k1,1V -k2,2n > {output}
+        """ 
+
+def unmerged_bed(wildcards):
+    if wildcards.source == 'cnmops':
+        return rules.standardize_cnmops.output.bed
+    if wildcards.source == 'cnvnator':
+        return rules.standardize_cnvnator.output.bed
+    if wildcards.source == 'genomestrip':
+        return rules.standardize_genomestrip.output.bed
+    if wildcards.source == 'merged_algs':
+        return rules.concat_standardized_beds.output.bed
+
+rule merge_raw_depth_calls:
+    input:
+        bed=unmerged_bed
+    output:
+        merged='std_beds/{source}/{sample}.{svtype}.merged.bed' 
+    params:
+        dist=0
+    shell:
+        """
+        bedtools merge -i {input} -d {params.dist} -c 4,5,6 -o sum \
+            | awk -v OFS="\\t" '{{print $1, $2, $3, $3-$2}}' \
+            > {output.merged};
+        """
+
+rule caller_coverage:
+    input:
+        merged=rules.merge_raw_depth_calls.output.merged.format(
+                         source='merged_algs', sample='{sample}', svtype='{svtype}'),
+        originals=expand(rules.merge_raw_depth_calls.output.merged,
+                         source=SOURCES, sample='{sample}', svtype='{svtype}')
+    output:
+        bed='std_beds/merged_algs/{sample}.{svtype}.cov.bed'
+    shell:
+        """
+        bedtools coverage -a {input.merged} -b {input.originals[0]} \
+            | cut -f 1-4,8 \
+            | bedtools coverage -a stdin -b {input.originals[1]} \
+            | cut -f 1-5,9 \
+            | bedtools coverage -a stdin -b {input.originals[2]} \
+            | cut -f 1-6,10 \
+            | awk -v OFS="\\t" '{{print $1, $2, $3, "{wildcards.sample}", $4, $5, $6, $7}}' \
+            > {output}
+        """
+
+def get_batched_depth_calls(wildcards):
+    samples = BATCH_KEY.loc[(BATCH_KEY.batch == wildcards.batch) &
+                            BATCH_KEY['group'].isin(GROUPS), 'sample']
+    return expand(rules.caller_coverage.output.bed,
+                  sample=samples, svtype=wildcards.svtype)
+
+rule concat_merged_depth_calls:
+    input:
+        get_batched_depth_calls
+    output:
+        bed='std_beds/{batch}.{svtype}.bed.gz',
+        idx='std_beds/{batch}.{svtype}.bed.gz.tbi',
+    shell:
+        """
+        cat {input} \
+          | sort -k1,1V -k2,2n \
+          | awk -v OFS="\\t" '{{$3=$3"\t{wildcards.batch}_{wildcards.svtype}_"NR; $5="{wildcards.svtype}"; print}}' \
+          | cat <(echo -e "#chr\\tstart\\tend\\tname\\tsample\\tsvtype\\tcnmops\\tcnvnator\\tgenomestrip") - \
+          | bgzip -c \
+          > {output.bed};
+        tabix -p bed {output.bed}
+        """

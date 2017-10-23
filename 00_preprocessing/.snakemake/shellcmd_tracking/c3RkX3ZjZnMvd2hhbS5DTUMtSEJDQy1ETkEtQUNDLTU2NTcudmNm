@@ -1,0 +1,3 @@
+
+        svtools standardize data/raw_vcfs/wham/wham.CMC-HBCC-DNA-ACC-5657.vcf.gz std_vcfs/wham.CMC-HBCC-DNA-ACC-5657.vcf wham
+        

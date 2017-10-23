@@ -1,0 +1,42 @@
+# Key
+batches: ../ref/batch.key
+
+batchlists:
+    Phase1: ../ref/samples.Phase1.list
+    Pilot: ../ref/samples.Pilot.list
+
+# Input directory
+input_vcfs: ../00_preprocessing/filtered_vcfs/
+input_beds: ../00_preprocessing/std_beds/
+
+# Subsets to analyze
+groups: ../ref/quads.519.list
+chroms: ../ref/chroms.allosomes.list
+pesr_sources:
+    # - delly
+    # - lumpy
+    # - manta
+    - wham
+mei_sources:
+    - melt
+cnv_types:
+    - DEL
+    - DUP
+
+# PE/SR clustering parameters
+vcfcluster:
+    dist: 300
+    frac: 0.1
+    blacklist: ../ref/b37.lumpy.exclude.4-13.bed.gz
+    svsize: 0
+    flags: ""
+    #flags: "--preserve-ids"
+
+svtypes:
+    pesr: DEL,DUP,INV,BND
+    mei: INS
+
+# Depth clustering parameters
+bedcluster:
+    frac: 0.8
+    flags: "--merge-coordinates"

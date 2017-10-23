@@ -1,0 +1,4 @@
+
+        vcf-sort -c filtered_vcfs/wham.Pitt-DNA-PFC-1453.vcf | bgzip -c > filtered_vcfs/wham.Pitt-DNA-PFC-1453.vcf.gz;
+        tabix -p vcf filtered_vcfs/wham.Pitt-DNA-PFC-1453.vcf.gz
+        

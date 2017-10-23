@@ -1,0 +1,4 @@
+
+        vcf-sort -c filtered_vcfs/wham.Penn-DNA-PFC-101.vcf | bgzip -c > filtered_vcfs/wham.Penn-DNA-PFC-101.vcf.gz;
+        tabix -p vcf filtered_vcfs/wham.Penn-DNA-PFC-101.vcf.gz
+        

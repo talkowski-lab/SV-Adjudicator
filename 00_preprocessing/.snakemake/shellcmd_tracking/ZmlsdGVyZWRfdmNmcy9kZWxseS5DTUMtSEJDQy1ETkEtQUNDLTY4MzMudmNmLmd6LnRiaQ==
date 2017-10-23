@@ -1,0 +1,4 @@
+
+        vcf-sort -c filtered_vcfs/delly.CMC-HBCC-DNA-ACC-6833.vcf | bgzip -c > filtered_vcfs/delly.CMC-HBCC-DNA-ACC-6833.vcf.gz;
+        tabix -p vcf filtered_vcfs/delly.CMC-HBCC-DNA-ACC-6833.vcf.gz
+        

@@ -1,0 +1,53 @@
+
+AUTOSOMES = [str(x) for x in range(1, 23)]
+ALLOSOMES = 'X Y'.split()
+
+def input_vcf(wildcards):
+    path='{input_vcfs}/{batch}.{source}.{chrom}.vcf.gz'
+    path = path.format(input_vcfs=config['input_vcfs'], batch=wildcards.batch,
+                       source=wildcards.source, chrom=wildcards.chrom)
+    return path
+
+# TODO: generate blacklist from batch key
+rule petest_autosomes:
+    input:
+        vcf=input_vcf
+    output:
+        metrics='petest/{batch}.{source}.{chrom}.stats',
+    wildcard_constraints:
+        chrom='(' + '|'.join(AUTOSOMES) + ')'
+    shell:
+         """
+         svtools pe-test {input.vcf} {config[pe_counts]} {output.metrics}
+         """
+
+rule petest_allosomes:
+    input:
+        vcf=input_vcf
+    output:
+        metrics='petest_allosomes/{batch}.{source}.{chrom}.{sex}.stats',
+    params:
+        whitelist='whitelists/{batch}.{sex}.list'
+    shell:
+         """
+         svtools pe-test --samples {params.whitelist} \
+            {input.vcf} {config[pe_counts]} {output.metrics}
+         """
+
+rule merge_allosomes:
+    input:
+        males='petest_allosomes/{batch}.{source}.{chrom}.males.stats',
+        females='petest_allosomes/{batch}.{source}.{chrom}.females.stats',
+    output:
+        metrics='petest/{batch}.{source}.{chrom}.stats',
+    wildcard_constraints:
+        chrom='(' + '|'.join(ALLOSOMES) + ')'
+    run:
+        males = pd.read_table(input.males)
+        females = pd.read_table(input.females)
+        if wildcards.chrom == 'Y':
+            males.to_csv(output.metrics, sep='\t', index=False)
+        else:
+            male_only = females.log_pval.isnull()
+            females.loc[male_only] = males
+            females.to_csv(output.metrics, sep='\t', index=False, na_rep='NA')

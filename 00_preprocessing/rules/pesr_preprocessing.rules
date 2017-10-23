@@ -1,0 +1,58 @@
+
+
+SOURCES = config['pesr_sources']
+SVTYPES = config['svtypes']
+
+with open(config['groups']) as glist:
+    GROUPS = [g.strip() for g in glist.readlines()]
+
+rule standardize_vcf:
+    input:
+        'data/raw_vcfs/{source}/{source}.{group}.vcf.gz'
+    output:
+        vcf='std_vcfs/{source}.{group}.vcf'
+    params:
+        prefix=lambda wildcards: '{source}_{group}'.format(**wildcards)
+    shell:
+        """
+        svtools standardize --prefix {params.prefix} {input} {output} {wildcards.source}
+        """
+
+rule identify_vcf_outliers:
+    input:
+        expand(rules.standardize_vcf.output.vcf, group=GROUPS, source='{source}')
+    output:
+        outliers='outliers/{source}.list'
+    params:
+        svtypes=SVTYPES
+    script:
+        "scripts/find_outliers.py"
+
+rule remove_vcf_outliers:
+    input:
+        vcf=rules.standardize_vcf.output.vcf,
+        outliers=rules.identify_vcf_outliers.output.outliers
+    output:
+        vcf=temp('filtered_vcfs/{source}.{group}.vcf')
+    script:
+        "scripts/remove_outliers.py"
+
+def filtered_vcf(wildcards):
+    source = wildcards.source
+    if source in config['outlier_removal']:
+        return rules.remove_vcf_outliers.output.vcf
+    else:
+        return rules.standardize_vcf.output.vcf
+        
+rule sort_vcfs:
+    input:
+        filtered_vcf
+    output:
+        vcf='filtered_vcfs/{source}.{group}.vcf.gz',
+        idx='filtered_vcfs/{source}.{group}.vcf.gz.tbi',
+    shell:
+        """
+        vcf-sort -c {input} | bgzip -c > {output.vcf};
+        tabix -p vcf {output.vcf}
+        """
+

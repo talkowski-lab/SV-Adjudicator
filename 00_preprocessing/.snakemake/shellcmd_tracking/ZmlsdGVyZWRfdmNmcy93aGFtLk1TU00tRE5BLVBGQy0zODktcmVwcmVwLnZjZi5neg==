@@ -1,0 +1,4 @@
+
+        vcf-sort -c filtered_vcfs/wham.MSSM-DNA-PFC-389-reprep.vcf | bgzip -c > filtered_vcfs/wham.MSSM-DNA-PFC-389-reprep.vcf.gz;
+        tabix -p vcf filtered_vcfs/wham.MSSM-DNA-PFC-389-reprep.vcf.gz
+        

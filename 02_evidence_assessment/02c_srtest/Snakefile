@@ -1,0 +1,24 @@
+
+configfile: 'config.yaml'
+
+include: 'rules/srtest.rules'
+
+import pandas as pd
+
+BATCH_KEY = pd.read_table(config['batches'], dtype=str)
+BATCHES = sorted(BATCH_KEY.batch.unique())
+
+PESR_SOURCES = config['pesr_sources']
+SOURCES = PESR_SOURCES + ['depth']
+
+with open(config['chroms']) as clist:
+    CHROMS = [c.strip() for c in clist.readlines()]
+
+wildcard_constraints:
+    source='(' + '|'.join(SOURCES) + ')',
+    chrom='(' + '|'.join(CHROMS) + ')'
+
+rule all:
+    input:
+        expand('srtest/{batch}.{source}.{chrom}.stats',
+               batch=BATCHES, source=PESR_SOURCES, chrom=CHROMS),

@@ -1,0 +1,47 @@
+
+import pandas as pd
+
+with open(config['groups']) as glist:
+    GROUPS = [g.strip() for g in glist.readlines()]
+
+PESR_SOURCES = config['pesr_sources']
+
+rule count_raw_pesr:
+    input:
+        'std_vcfs/{source}.{group}.vcf'
+    output:
+        'qc/raw_counts/{source}.{group}.txt'
+    shell:
+        """
+        svtools count-svtypes {input} {output}
+        """
+
+rule count_filtered_pesr:
+    input:
+        'filtered_vcfs/{source}.{group}.vcf'
+    output:
+        'qc/filtered_counts/{source}.{group}.txt'
+    shell:
+        """
+        svtools count-svtypes {input} {output}
+        """
+
+def get_counts(wildcards):
+    path = 'qc/{metric}/{{source}}.{{group}}.txt'.format(metric=wildcards.metric)
+    flist = {source: [path.format(source=source, group=group) for group in GROUPS] for source in PESR_SOURCES}    
+    return flist
+ 
+rule agg_counts:
+    input:
+        unpack(get_counts)
+    output:
+        'qc/aggregate/{metric}.txt'
+    run:
+        dfs = []
+        for source, flist in input.items():
+            for f in flist:
+                df = pd.read_table(f)
+                df['source'] = source
+                dfs.append(df)
+        metrics = pd.concat(dfs)
+        metrics.to_csv(output[0], sep='\t', index=False)

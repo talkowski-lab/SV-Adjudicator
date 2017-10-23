@@ -1,0 +1,40 @@
+
+configfile: 'config.yaml'
+
+include: 'rules/aggregate.rules'
+include: 'rules/random_forest.rules'
+include: 'rules/filter.rules'
+include: 'rules/dn-check.rules'
+
+import pandas as pd
+
+BATCH_KEY = pd.read_table(config['batches'], dtype=str)
+BATCHES = sorted(BATCH_KEY.batch.unique())
+BATCHES = ['Phase1']
+
+PESR_SOURCES = config['pesr_sources']
+SOURCES = PESR_SOURCES + ['depth'] #+ ['depth', 'melt']
+
+with open(config['chroms']) as clist:
+    CHROMS = [c.strip() for c in clist.readlines()]
+
+wildcard_constraints:
+    source='(' + '|'.join(SOURCES) + ')',
+    chrom='(' + '|'.join(CHROMS) + ')'
+
+rule all:
+    input:
+        # Aggregated tables
+        expand('metrics/{batch}.{source}.{chrom}.metrics',
+               batch=BATCHES, source=SOURCES, chrom=CHROMS),
+        # Filtering (after RF)
+#        expand('filtered_vcfs/{batch}.{source}.{chrom}.vcf.gz', 
+#               batch=BATCHES, source=['melt'], chrom=CHROMS),
+#        expand('fails/{batch}.{source}.{chrom}.vcf.gz', 
+#               batch=BATCHES, source=['melt'], chrom=CHROMS),
+        # De novo test stats
+        expand('dn_filtered_metrics/{batch}.{source}.{chrom}.metrics', 
+               batch=BATCHES, source=SOURCES, chrom=CHROMS)
+#        expand('train_metrics/{batch}.metrics', batch=BATCHES),
+#        expand('baf_metrics/{batch}.del.all.metrics', batch=BATCHES),
+#        expand('baf_rf/{batch}.del.dep.txt', batch=BATCHES)

@@ -1,0 +1,4 @@
+
+        vcf-sort -c filtered_vcfs/delly.MSSM-DNA-PFC-13.vcf | bgzip -c > filtered_vcfs/delly.MSSM-DNA-PFC-13.vcf.gz;
+        tabix -p vcf filtered_vcfs/delly.MSSM-DNA-PFC-13.vcf.gz
+        

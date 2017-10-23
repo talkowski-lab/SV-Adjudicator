@@ -1,0 +1,13 @@
+
+configfile: 'config.yaml'
+
+include: 'rules/collection.rules'
+
+with open(config['samples']) as slist:
+    SAMPLES = [s.strip() for s in slist.readlines()]
+
+rule all:
+    input:
+        dynamic('scripts/helpers.{platform}.so')
+#        expand('split_counts/{sample}.txt.gz', sample=SAMPLES),
+#        expand('disc_counts/{sample}.txt.gz', sample=SAMPLES),

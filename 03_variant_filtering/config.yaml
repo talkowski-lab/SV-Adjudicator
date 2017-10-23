@@ -1,0 +1,52 @@
+# Key
+batches: ../ref/batch.key
+samples:
+    Phase1: ../ref/samples.Phase1.list
+    Pilot: ../ref/samples.Pilot.list
+
+# Test stats directories
+rdtest: "../02_evidence_assessment/02a_rdtest/rdtest"
+petest: "../02_evidence_assessment/02b_petest/petest"
+srtest: "../02_evidence_assessment/02c_srtest/srtest"
+baftest: "../02_evidence_assessment/02d_baftest/baftest"
+input_vcfs: "../01_algorithm_integration/vcfcluster"
+input_beds: "../01_algorithm_integration/rdtest_beds"
+
+cnv_p:
+    Phase1: /data/talkowski/Samples/SFARI/DeepSeq/HarrisonCompare/GT_Filtering/phase1_RF/combined_prob/combined_CNV.passing.p
+    Pilot: /data/talkowski/Samples/SFARI/DeepSeq/HarrisonCompare/GT_Filtering/pilot_RF/combined_prob/combined_CNV.passing.p
+bca_p: 
+    Phase1: /data/talkowski/Samples/SFARI/DeepSeq/HarrisonCompare/GT_Filtering/phase1_RF/combined_prob/combined_BCA.passing.p
+    Pilot: /data/talkowski/Samples/SFARI/DeepSeq/HarrisonCompare/GT_Filtering/pilot_RF/combined_prob/combined_BCA.passing.p
+melt_p:
+    Phase1: /data/talkowski/Samples/SFARI/DeepSeq/HarrisonCompare/Melt/rebuild_pipeline/melt.pass.phase1
+
+# Subsets to analyze
+groups: ../ref/quads.519.list
+#chroms: ../ref/chroms.all.list
+chroms: ../ref/chroms.autosomes.list
+pesr_sources:
+    - delly
+    - lumpy
+    - manta
+    - wham
+mei_sources:
+    - melt
+
+blacklist: /data/talkowski/rlc47/src/GRch37.segdups_gaps_abParts_heterochrom.lumpy.exclude.bed
+random-forest: /PHShome/my520/code/RandomForest/RandomForest.R
+seed: 1343124
+
+rf-features:
+    baf:
+        dep:
+            - BAF_snp_ratio
+        indep:
+            - BAF_del_loglik
+
+rdtest: /PHShome/my520/code/RdTest/RdTest.R
+coveragefile: /data/talkowski/Samples/SFARI/deep_sv/asc_540/bincov/matrices/ASC540.all.binCov.raw.bed.gz
+medianfile: /data/talkowski/Samples/SFARI/deep_sv/asc_540/bincov/matrices/ASC540.all.binCov.median
+famfile: /data/talkowski/Samples/SFARI/lists/SFARI_Real.fam
+pe_counts: '../02_evidence_assessment/02b_petest/pe_counts/cohort.txt.gz'
+sr_counts: '../../pesr_testing/split_counts/cohort.txt.gz'

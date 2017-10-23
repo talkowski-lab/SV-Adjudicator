@@ -1,0 +1,55 @@
+"""
+pesr.snake
+Matthew Stone <mstone5@mgh.harvard.edu>
+
+Cluster SV called by PE/SR-based algorithms. 
+"""
+
+module_config = config['pesr_alg_integration']
+
+SOURCES = config['pesr_sources']
+
+with open(config['chroms']) as clist:
+    CHROMS = [c.strip() for c in clist.readlines()]
+
+with open(config['quads']) as qlist:
+    QUADS = [q.strip() for q in qlist.readlines()]
+
+rule make_alg_vcf_list:
+    input:
+        expand('preprocessing/filtered_vcfs/{{source}}.{quad}.vcf.gz',
+               quad=QUADS)
+    output:
+        vcflist='integration/pesr/vcflists/vcfs.{source}.list'
+    run:
+        with open(output[0], 'w') as fout:
+            for fname in sorted(input):
+                fout.write(fname + '\n')
+
+rule vcfcluster_by_alg:
+    """Cluster calls from a single algorithm across samples."""
+    input:
+        vcflist=rules.make_alg_vcf_list.output.vcflist
+    output:
+        vcf='integration/pesr/vcfcluster/{source}/cohort.{chrom}.vcf',
+    params:
+        **module_config['vcfcluster'],
+        prefix=lambda wildcards: 'cohort.{0}'.format(wildcards.source)
+    shell:
+        """
+        svtools vcfcluster {input} {output.vcf} \
+            -r {wildcards.chrom} \
+            -p {params.prefix} \
+            -d {params.min_dist} \
+            -f {params.min_recip_frac} \
+            -z {params.min_svsize} \
+            -x {params.blacklist}
+        """
+
+rule make_pesr_rdtest_beds:
+    input:
+        vcf=rules.vcfcluster_by_alg.output.vcf
+    output:
+        bed='integration/pesr/rdtest_beds/{source}/cohort.{chrom}.bed'
+    shell:
+        "./scripts/make_pesr_rdtest_bed.py {input} {output}"

@@ -1,0 +1,4 @@
+
+        vcf-sort -c filtered_vcfs/lumpy.CMC-HBCC-DNA-ACC-4194.vcf | bgzip -c > filtered_vcfs/lumpy.CMC-HBCC-DNA-ACC-4194.vcf.gz;
+        tabix -p vcf filtered_vcfs/lumpy.CMC-HBCC-DNA-ACC-4194.vcf.gz
+        

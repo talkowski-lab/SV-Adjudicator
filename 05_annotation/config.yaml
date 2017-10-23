@@ -1,0 +1,5 @@
+gencode:
+    annotation_gtf: /data/talkowski/Samples/SFARI/ASC_analysis/annotations/gencode_v19/gencode.v19.annotation.gtf.gz
+    pc_transcripts_fa: /data/talkowski/Samples/SFARI/ASC_analysis/annotations/gencode_v19/gencode.v19.pc_transcripts.fa.gz
+    pc_translations_fa: /data/talkowski/Samples/SFARI/ASC_analysis/annotations/gencode_v19/gencode.v19.pc_translations.fa.gz
+    transcript_source: /data/talkowski/Samples/SFARI/ASC_analysis/annotations/gencode_v19/gencode.v19.metadata.Transcript_source

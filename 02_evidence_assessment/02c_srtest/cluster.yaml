@@ -1,0 +1,7 @@
+__default__:
+    queue: normal
+    log: "logs/{rule}.{wildcards}.out"
+    jobname: "{rule}.{wildcards}"
+    flags: ""
+srtest:
+    queue: normal

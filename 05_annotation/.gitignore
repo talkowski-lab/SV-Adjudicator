@@ -1,0 +1,6 @@
+vcfs/
+noncoding/
+gencode/
+gencode_anno/
+old_scripts/
+annotated_vcfs/

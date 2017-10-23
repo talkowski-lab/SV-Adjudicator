@@ -1,0 +1,20 @@
+# Ignore data directories
+filtered_vcfs/
+rdtest_vcfs/
+vcfcluster/
+vcflists/
+complex_linking/
+logs/
+
+data/
+with_DF/
+no_DF/
+
+ref
+unfiltered_vcfs
+*.bed
+*.table*
+*.p
+
+combined_prob/
+denovo/

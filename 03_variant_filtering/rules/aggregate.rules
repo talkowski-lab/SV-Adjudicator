@@ -1,0 +1,97 @@
+
+"""
+Consolidate variant metrics.
+"""
+
+def input_vcf(wildcards):
+    path='{input_vcfs}/{batch}.{source}.{chrom}.vcf.gz'
+    path = path.format(input_vcfs=config['input_vcfs'], batch=wildcards.batch,
+                       source=wildcards.source, chrom=wildcards.chrom)
+    return path
+
+def input_bed(wildcards):
+    path='{input_beds}/{batch}.{source}.{chrom}.bed'
+    path = path.format(input_beds=config['input_beds'], batch=wildcards.batch,
+                       source=wildcards.source, chrom=wildcards.chrom)
+    return path
+
+def get_testfiles(dtypes):
+    inputs = {}
+
+    dtypes = [dtype + 'test' for dtype in dtypes]
+    fpath = '{dirname}/{{batch}}.{{source}}.{{chrom}}.{suffix}'
+
+    for dtype in dtypes:
+        if dtype == 'rdtest':
+            suffix = 'metrics'
+        elif dtype == 'baftest':
+            suffix = 'stat'
+        else:
+            suffix = 'stats'
+
+        path = fpath.format(dirname=config[dtype], suffix=suffix)
+        inputs[dtype] = path
+
+#    inputs['vcf'] = fpath.format(dirname=config['vcfs'], suffix='vcf')
+
+    return inputs
+
+rule aggregate_vcf:
+    output:
+        'metrics/{batch}.{source}.{chrom}.metrics'
+    params:
+        vcf=input_vcf,
+        **get_testfiles('pe sr rd baf'.split())
+    wildcard_constraints:
+        source='(' + '|'.join(config['pesr_sources']) + ')'
+    shell:
+        """
+        ./scripts/aggregate.py \
+            -r {params.rdtest} \
+            -s {params.srtest} \
+            -p {params.petest} \
+            -b {params.baftest} \
+            -v {params.vcf} \
+            {output}
+        """
+
+rule aggregate_melt:
+    output:
+        'metrics/{batch}.{source}.{chrom}.metrics'
+    params:
+        vcf=input_vcf,
+        **get_testfiles('sr'.split())
+    wildcard_constraints:
+        source='melt'
+    shell:
+        """
+        ./scripts/aggregate.py \
+            -s {params.srtest} \
+            -v {params.vcf} \
+            {output}
+        """
+
+# TODO: put whitelists in sane location
+def batch_list(wildcards):
+    batch = wildcards.batch
+    return '{1}/../whitelists/{0}.list'.format(batch, config['rdtest'])
+
+rule aggregate_bed:
+    output:
+        'metrics/{batch}.{source}.{chrom}.metrics'
+    params:
+        bed=input_bed,
+        batchlist=batch_list,
+        **get_testfiles('rd baf'.split())
+    wildcard_constraints:
+        source='depth'
+    shell:
+        """
+        ./scripts/aggregate.py \
+            -r {params.rdtest} \
+            -b {params.baftest} \
+            -v {params.bed} \
+            --batch-list {params.batchlist} \
+            --bed \
+            {output}
+        """

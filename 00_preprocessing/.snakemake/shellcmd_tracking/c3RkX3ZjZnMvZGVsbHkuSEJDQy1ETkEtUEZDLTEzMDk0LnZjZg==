@@ -1,0 +1,3 @@
+
+        svtools standardize data/raw_vcfs/delly/delly.HBCC-DNA-PFC-13094.vcf.gz std_vcfs/delly.HBCC-DNA-PFC-13094.vcf delly
+        

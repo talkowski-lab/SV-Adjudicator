@@ -1,0 +1,67 @@
+
+
+PESR_SOURCES = config['pesr_sources']
+MEI_SOURCES = config['mei_sources']
+
+rule filter_vcfs:
+    input:
+        vcf=os.path.join(config['input_vcfs'], '{batch}.{source}.{chrom}.vcf.gz'),
+        cnv=lambda wildcards: config['cnv_p'][wildcards.batch],
+        bca=lambda wildcards: config['bca_p'][wildcards.batch],
+    output:
+        vcf='filtered_vcfs/{batch}.{source}.{chrom}.vcf.gz',
+        tbi='filtered_vcfs/{batch}.{source}.{chrom}.vcf.gz.tbi'
+    wildcard_constraints:
+        source='(' + '|'.join(PESR_SOURCES) + ')'
+    shell:
+        """
+        cat \
+            <(sed -e '1d' {input.cnv} | cut -f1 | fgrep -w -f - <(zcat {input.vcf})) \
+            <(sed -e '1d' {input.bca} | cut -f1 | fgrep -w -f - <(zcat {input.vcf}) | sed -e 's/SVTYPE=DEL/SVTYPE=BND/' -e 's/SVTYPE=DUP/SVTYPE=BND/') \
+          | cat <(sed -n -e '/^#/p' <(zcat {input.vcf})) - \
+          | vcf-sort -c \
+          | bgzip -c \
+          > {output.vcf};
+        tabix -f -p vcf {output.vcf}
+        """
+
+rule filter_meis:
+    input:
+        vcf=os.path.join(config['input_vcfs'], '{batch}.{source}.{chrom}.vcf.gz'),
+        melt=lambda wildcards: config['melt_p'][wildcards.batch],
+    output:
+        vcf='filtered_vcfs/{batch}.{source}.{chrom}.vcf.gz',
+        tbi='filtered_vcfs/{batch}.{source}.{chrom}.vcf.gz.tbi'
+    wildcard_constraints:
+        source='(' + '|'.join(MEI_SOURCES) + ')'
+    shell:
+        """
+        cut -f1 {input.melt} \
+          | fgrep -w -f - <(zcat {input.vcf} | sed -e '/^#/d') \
+          | cat <(sed -n -e '/^#/p' <(zcat {input.vcf})) - \
+          | vcf-sort -c \
+          | bgzip -c \
+          > {output.vcf};
+        tabix -f -p vcf {output.vcf}
+        """
+
+rule filter_fails:
+    input:
+        vcf=os.path.join(config['input_vcfs'], '{batch}.{source}.{chrom}.vcf.gz'),
+        cnv=lambda wildcards: config['cnv_p'][wildcards.batch],
+        bca=lambda wildcards: config['bca_p'][wildcards.batch],
+        melt=lambda wildcards: config['melt_p'][wildcards.batch],
+    output:
+        vcf='fails/{batch}.{source}.{chrom}.vcf.gz',
+        tbi='fails/{batch}.{source}.{chrom}.vcf.gz.tbi'
+    shell:
+        """
+        cat {input.cnv} {input.bca} {input.melt} \
+          | cut -f 1 \
+          | fgrep -v -w -f - <(zcat {input.vcf} | sed -e '/^#/d') \
+          | cat <(sed -n -e '/^#/p' <(zcat {input.vcf})) - \
+          | vcf-sort -c \
+          | bgzip -c \
+          > {output.vcf};
+        tabix -f -p vcf {output.vcf}
+        """

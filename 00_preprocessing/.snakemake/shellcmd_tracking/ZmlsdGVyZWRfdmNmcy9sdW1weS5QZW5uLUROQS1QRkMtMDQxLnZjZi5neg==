@@ -1,0 +1,4 @@
+
+        vcf-sort -c filtered_vcfs/lumpy.Penn-DNA-PFC-041.vcf | bgzip -c > filtered_vcfs/lumpy.Penn-DNA-PFC-041.vcf.gz;
+        tabix -p vcf filtered_vcfs/lumpy.Penn-DNA-PFC-041.vcf.gz
+        

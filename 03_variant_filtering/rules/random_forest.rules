@@ -1,0 +1,120 @@
+
+with open(config['chroms']) as clist:
+    CHROMS = [c.strip() for c in clist.readlines()]
+
+PESR_SOURCES = config['pesr_sources']
+SOURCES = PESR_SOURCES + ['depth']
+
+rule merge_beds:
+    input:
+        expand(os.path.join(config['input_beds'], '{{batch}}.{source}.{chrom}.bed'),
+                source=SOURCES, chrom=CHROMS)
+    output:
+        'rdtest_beds/{batch}.bed'
+    shell:
+        """
+        cat {input} \
+          | sed -e '/^#/d' \
+          | sort -k1,1 -k2,2n \
+          | cat <(head -n1 {input[0]}) - \
+          > {output}
+        """
+
+# Config X/Y removal above
+rule get_blacklist_coverage:
+    input:
+        'rdtest_beds/{batch}.bed'
+    output:
+        coverage='metadata/{batch}.cov.txt'
+    shell:
+        """
+        bedtools coverage -a {input} -b {config[blacklist]} -sorted \
+          | awk -v OFS="\\t" '{{print $4, $3-$2, $NF}}' \
+          | cat <(echo -e "name\\tsize\\tpoor_region_cov") - \
+          > {output}
+        """
+
+# rule filter_rmsk:
+#     input:
+#         'rdtest_beds/{batch}.bed'
+#     output:
+#         'one_end_linesine_txt'
+#     shell:
+#         """
+#         awk -v OFS="\\t" '{{print $1, $2, $2+1, $4;
+#                             print $1, $3-1, $3, $4}}' {input} \
+#           | bedtools intersect -sorted -a - -b {config['bkpt_rmsk']} \
+#           | awk '{print $4}' \
+#           | sort -u \
+#           > {output}
+#         """
+# 
+# rule get_called_samples:
+#     input:
+#         expand(os.path.join(config['input_vcfs'], '{{batch}}.{source}.{chrom}.vcf.gz'),
+#                 source=SOURCES, chrom=CHROMS)
+#     output:
+#         'SV.samples'
+#     run:
+#         import pysam
+#         import svtools.utils as svu
+#         with open(output[0]) as fout:
+#             for vcfpath in input:
+#                 vcf = pysam.VariantFile(vcfpath)
+#                 for record in vcf:
+#                     samples = svu.get_called_samples(record)
+#                     samples = ','.join(samples)
+#                     entry = '{0}\t{1}\n'
+#                     entry = entry.format(record.id, samples)
+#                     fout.write(entry)
+
+
+rule build_metrics_file:
+    input:
+        metrics=expand('metrics/{{batch}}.{source}.{chrom}.metrics',
+               source=SOURCES, chrom=CHROMS),
+        coverage=rules.get_blacklist_coverage.output.coverage
+    output:
+        metrics='train_metrics/{batch}.metrics'
+    script:
+        "scripts/merge_metrics.py"
+
+rule build_baf_training_set:
+    input:
+        metrics='train_metrics/{batch}.metrics'
+    output:
+        'baf_metrics/{batch}.del.train.metrics',
+        'baf_metrics/{batch}.del.all.metrics',
+        'baf_metrics/{batch}.dup.train.metrics',
+        'baf_metrics/{batch}.dup.all.metrics',
+    shell:
+        """
+        ./scripts/build_training_set.py {input.metrics}
+        """
+
+rule run_baf_random_forest:
+    input:
+        train='baf_metrics/{batch}.{svtype}.train.metrics',
+        all='baf_metrics/{batch}.{svtype}.all.metrics',
+    output:
+        indep='baf_rf/{batch}.{svtype}.indep.txt',
+        dep='baf_rf/{batch}.{svtype}.dep.txt',
+        pred='baf_rf/{batch}.{svtype}.pred',
+        cutoffs='baf_rf/{batch}.{svtype}.cutoffs',
+        rf='baf_rf/{batch}.{svtype}.rf',
+    params:
+        prefix=lambda wildcards: 'baf_rf/{batch}.{svtype}'.format(**wildcards)
+    shell:
+        """
+        for metric in {config[rf-features][baf][dep]}; do
+            echo $metric; 
+        done > {output.dep};
+        for metric in {config[rf-features][baf][indep]}; do
+            echo $metric; 
+        done > {output.indep};
+        Rscript {config[random-forest]} \
+          {input.train} {input.all} {config[seed]} \
+          {params.prefix} {output.indep} {output.dep}
+        """
+
+

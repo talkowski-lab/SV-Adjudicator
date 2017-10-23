@@ -1,0 +1,82 @@
+
+configfile: 'config.yaml'
+
+VARIANT_SAMPLES = {}
+with open(config['bed']) as bedfile:
+    for line in bedfile:
+        if line.startswith('#'):
+            continue
+
+        data = line.strip().split()
+        name = data[3]
+        samples = data[4]
+        VARIANT_SAMPLES[name] = samples
+
+VARIANTS = sorted(VARIANT_SAMPLES.keys())
+SAMPLES = sorted(set([s for slist in VARIANT_SAMPLES.values() 
+                        for s in slist.split(',')]))
+TEST = ['11194.p1']
+
+PREFIX = os.path.splitext(os.path.basename(config['bed']))[0]
+
+wildcard_constraints:
+    prefix=PREFIX
+   
+rule all:
+    input:
+        'calls/{prefix}.sr_windows.txt'.format(prefix=PREFIX),
+        slists=expand('sample_lists/{name}.txt', name=VARIANTS)
+
+rule make_background:
+    params:
+        samples=lambda wildcards: VARIANT_SAMPLES[wildcards.name]
+    output:
+        bed='sample_lists/{name}.txt'
+    shell:
+        "./choose_background.py {wildcards.name} {params.samples} {config[quads]} {output}"
+
+rule make_windowed_regions:
+    input:
+        config['bed']
+    output:
+        'calls/{prefix}.sr_windows.txt'
+    shell:
+        "./add_windows.py {input} {config[window]} {output}"
+
+rule merge_sample_lists:
+    input:
+        slists=expand('sample_lists/{name}.txt', name=VARIANTS)
+    output:
+        'sample_lists/{prefix}.merged.txt'
+    run:
+        fout = open(output[0], 'w')
+        fout.write('name\tsample\tcall_status\n')
+        for fname in input.slists:
+            with open(fname) as slist:
+                for line in slist:
+                    if line.startswith('name'):
+                        continue
+                    fout.write(line)
+        fout.close()
+
+rule make_sample_regions:
+    input:
+        regions='calls/sr_windows.txt',
+        slist='sample_lists/merged.txt'
+    output:
+        'sample_regions/{sample}.bed'
+    shell:
+        """
+        cat {input.slist} \
+          | fgrep -w -e {wildcards.sample} \
+          | cut -f1 \
+          | fgrep -w -f - {input.regions} \
+          | cut -f3 \
+          | sed -e 's/ /\\n/g' -e 's/:/\\t/g' -e 's/-/\\t/g' \
+          | sort -k1,1V -k2,2n \
+          | bedtools merge -i stdin \
+          | awk '{{print $1":"$2"-"$3}}' \
+          > {output}
+        """
+         
+    

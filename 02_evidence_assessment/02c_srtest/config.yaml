@@ -1,0 +1,24 @@
+# Key
+batches: ../../ref/batch.key
+
+input_beds: ../../01_algorithm_integration/rdtest_beds
+input_vcfs: ../../01_algorithm_integration/vcfcluster
+
+sr_counts: '../../../pesr_testing/split_counts/cohort.txt.gz'
+
+# Subsets to analyze
+groups: ../../ref/quads.519.list
+chroms: ../../ref/chroms.all.list
+pesr_sources:
+    - delly
+    - lumpy
+    - manta
+    - wham
+    - melt
+
+# RdTest parameters
+rdtest: scripts/RdTest.R
+coveragefile: /data/talkowski/Samples/SFARI/deep_sv/asc_540/bincov/matrices/ASC540.all.binCov.raw.bed.gz
+medianfile: /data/talkowski/Samples/SFARI/deep_sv/asc_540/bincov/matrices/ASC540.all.binCov.median
+famfile: /data/talkowski/Samples/SFARI/lists/SFARI_Real.fam
+rdtest_split_size: 100

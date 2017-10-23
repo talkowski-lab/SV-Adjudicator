@@ -1,0 +1,65 @@
+"""
+depth_integration.rules
+Matthew Stone
+
+Merge depth caller CNV across programs and samples.
+"""
+
+CNV = config['cnv_types']
+
+def variant_prefix(wildcards):
+    return '{batch}_depth_{svtype}_{chrom}'.format(**wildcards)
+
+def input_bed(wildcards):
+    path = '{input_beds}/{batch}.{svtype}.bed.gz'
+    path = path.format(input_beds=config['input_beds'],
+                       batch=wildcards.batch, svtype=wildcards.svtype)
+    return path
+
+# Cluster CNV calls
+rule bedcluster:
+    input:
+        bed=input_bed
+    output:
+        bed='bedcluster/{batch}.{svtype}.{chrom}.bed'
+    params:
+        prefix=variant_prefix,
+        **config['bedcluster']
+    shell:
+        """
+        svtools bedcluster {input.bed} -r {wildcards.chrom} \
+          -p {params.prefix} \
+          -f {params.frac} \
+          {params.flags} \
+          > {output}
+        """
+
+# Aggregate observations into variants and convert to RdTest format
+rule make_depth_rdtest_beds:
+    input:
+        expand(rules.bedcluster.output.bed, svtype=CNV, 
+               batch='{batch}', chrom='{chrom}')
+    output:
+        'rdtest_beds/{batch}.depth.{chrom}.bed'
+    shell:
+        """
+        cat \
+            <(./scripts/make_depth_rdtest_bed.py {input[0]} | sed '1d') \
+            <(./scripts/make_depth_rdtest_bed.py {input[1]} | sed '1d') \
+          | sort -k1,1V -k2,2n \
+          | cat <(echo -e "#chrom start end name samples svtype" | sed -e 's/ /\\t/g') - \
+          > {output}
+        """
+
+rule make_depth_vcfs:
+    input:
+        bed='rdtest_beds/{batch}.depth.{chrom}.bed'
+    output:
+        vcf='vcfcluster/{batch}.depth.{chrom}.vcf.gz',
+        tbi='vcfcluster/{batch}.depth.{chrom}.vcf.gz.tbi',
+    params:
+        samples=lambda wildcards: config['batchlists'][wildcards.batch]
+    shell:
+        """
+        svtools rdtest2vcf {input.bed} {params.samples} {output.vcf}
+        """

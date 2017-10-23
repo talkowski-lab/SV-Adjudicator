@@ -1,0 +1,10 @@
+# Ignore data directories
+data
+data/*
+std_beds/*
+std_vcfs/*
+outliers/*
+qc/*
+filtered_vcfs/*
+logs/*
+ref

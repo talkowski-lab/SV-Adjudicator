@@ -1,0 +1,3 @@
+
+        svtools standardize data/raw_vcfs/wham/wham.Penn-DNA-PFC-042.vcf.gz std_vcfs/wham.Penn-DNA-PFC-042.vcf wham
+        

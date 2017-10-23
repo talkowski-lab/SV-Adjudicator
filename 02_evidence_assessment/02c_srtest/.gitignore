@@ -1,0 +1,6 @@
+# Ignore data files
+srtest/*
+srtest_ttest/*
+logs/*
+srtest_*
+whitelists

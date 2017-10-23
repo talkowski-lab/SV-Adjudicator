@@ -1,0 +1,10 @@
+.*.swp
+.snakemake*
+*.bed
+*.txt
+*.bai
+*.bam
+*.log
+split_counts_samples/
+count_logs/
+bam_indexes

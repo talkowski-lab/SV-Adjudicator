@@ -1,0 +1,28 @@
+
+configfile: 'config.yaml'
+
+
+include: 'rules/rdtest.rules'
+
+import pandas as pd
+
+BATCH_KEY = pd.read_table(config['batches'], dtype=str)
+BATCHES = sorted(BATCH_KEY.batch.unique())
+BATCHES = ['Phase1']
+
+PESR_SOURCES = config['pesr_sources']
+SOURCES = PESR_SOURCES + ['depth']
+# SOURCES = ['depth']
+
+with open(config['chroms']) as clist:
+    CHROMS = [c.strip() for c in clist.readlines()]
+CHROMS = 'X Y'.split()
+
+wildcard_constraints:
+    source='(' + '|'.join(SOURCES) + ')',
+    chrom='(' + '|'.join(CHROMS) + ')'
+
+rule all:
+    input:
+        expand('rdtest/{batch}.{source}.{chrom}.metrics',
+               batch=BATCHES, source=SOURCES, chrom=CHROMS),

@@ -1,0 +1,5 @@
+
+# TODO: process and concatenate noncoding element beds provided in config
+rule make_noncoding_bed:
+    output:
+        touch('noncoding/noncoding_elements.bed')

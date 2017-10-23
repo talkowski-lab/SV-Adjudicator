@@ -1,0 +1,3 @@
+
+        svtools standardize data/raw_vcfs/manta/manta.CMC-HBCC-ACC-DNA-4245.vcf.gz std_vcfs/manta.CMC-HBCC-ACC-DNA-4245.vcf manta
+        

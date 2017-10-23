@@ -1,0 +1,23 @@
+
+configfile: 'config.yaml'
+
+include: 'rules/gencode.rules'
+include: 'rules/noncoding.rules'
+include: 'rules/annotate.rules'
+
+# BATCH_KEY = pd.read_table(config['batches'], dtype=str)
+# BATCHES = sorted(BATCH_KEY.batch.unique())
+# BATCHES = ['Phase1']
+# 
+# with open(config['chroms']) as clist:
+#     CHROMS = [c.strip() for c in clist.readlines()]
+# 
+# SOURCES = config['pesr_sources'] + ['depth']
+# 
+# wildcard_constraints:
+#     source='(' + '|'.join(SOURCES) + ')',
+#     chrom='(' + '|'.join(CHROMS) + ')'
+
+rule all:
+    input:
+        'annotated_vcfs/variants.22.vcf'

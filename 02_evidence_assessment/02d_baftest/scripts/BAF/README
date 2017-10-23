@@ -1,0 +1,5 @@
+# This part of the code does the actual BAF analysis
+# Input: baf file generated in the previous step (baf_snp_sorted.txt.gz), a standarized bed file listing the variants to validate
+# Example
+# ```python scrat.py Phase1.delly.22.stat ../Filegenerate/baf_snp_sorted.txt.gz --batch Phase1 > baf.result
+# Result: baf.result 

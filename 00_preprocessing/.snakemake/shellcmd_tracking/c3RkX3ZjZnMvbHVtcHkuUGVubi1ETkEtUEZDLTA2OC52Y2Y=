@@ -1,0 +1,3 @@
+
+        svtools standardize data/raw_vcfs/lumpy/lumpy.Penn-DNA-PFC-068.vcf.gz std_vcfs/lumpy.Penn-DNA-PFC-068.vcf lumpy
+        

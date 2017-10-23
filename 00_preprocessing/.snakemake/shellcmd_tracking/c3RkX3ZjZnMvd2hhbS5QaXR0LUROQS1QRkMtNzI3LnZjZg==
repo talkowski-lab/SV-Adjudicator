@@ -1,0 +1,3 @@
+
+        svtools standardize data/raw_vcfs/wham/wham.Pitt-DNA-PFC-727.vcf.gz std_vcfs/wham.Pitt-DNA-PFC-727.vcf wham
+        

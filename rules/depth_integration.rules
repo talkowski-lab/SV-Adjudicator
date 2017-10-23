@@ -1,0 +1,70 @@
+"""
+rd_merged.snake
+Matthew Stone
+
+
+Merge depth caller CNV across programs and samples.
+
+Input beds are product of cnv_clean; columns=chr,start,end,svtype,names
+
+1) bedtools merge to collapse CNV across programs within each sample
+2) 50% reciprocal overlap across samples
+3) bedcluster
+"""
+
+SOURCES = config['depth_sources']
+CNV = config['cnv_types']
+
+with open(config['chroms']) as clist:
+    CHROMS = [c.strip() for c in clist.readlines()]
+
+def variant_prefix(wildcards):
+    return 'depth_{0}_{1}'.format(wildcards.svtype, wildcards.chrom)
+
+# Cluster intersected bed
+rule bedcluster:
+    input:
+        bed='preprocessing/std_beds/cohort.{svtype}.bed.gz'
+    output:
+        bed='integration/depth/bedcluster/cohort_split.{svtype}.{chrom}.bed'
+    params:
+        prefix=variant_prefix,
+        frac=0.8
+    shell:
+        """
+        svtools bedcluster {input.bed} -r {wildcards.chrom} \
+            -p {params.prefix} -f {params.frac} --merge-coordinates > {output}
+        """
+
+# Merge split bed
+rule merge_across_svtypes:
+    input:
+        expand(rules.bedcluster.output.bed, svtype=CNV, chrom='{chrom}')
+    output:
+        bed='integration/depth/bedcluster/cohort.{chrom}.bed'
+    shell:
+        """
+        head -n1 {input[0]} > {output};
+        for f in {input}; do sed '1d' $f | sort -k1,1V -k2,2n >> {output}; done
+        """
+
+rule make_depth_rdtest_bed:
+    input:
+        bed=rules.merge_across_svtypes.output.bed
+    output:
+        'integration/depth/rdtest_beds/cohort.{chrom}.bed'
+    script:
+        "scripts/make_depth_rdtest_beds.py"
+
+rule rdtest_filter_depth:
+    input:
+        bed=rules.merge_across_svtypes.output.bed,
+        list='rdtest/depth/cohort.rdtest_pass.{chrom}.list'
+    output:
+        bed='integration/depth/rdtest_filtered/cohort.{chrom}.bed'
+    shell:
+        """
+        fgrep -w -f {input.list} {input.bed} \
+          | cat <(head -n1 {input.bed}) - \
+          > {output}
+        """

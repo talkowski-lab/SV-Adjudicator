@@ -1,0 +1,132 @@
+
+import pandas as pd
+configfile: 'config.yaml'
+
+# CNV_TYPES = 'poly_cnv hq_denovo lq_denovo mosaic_denovo'.split()
+# CNV_TYPES = 'complex_cnv complex_dst'.split()
+# CNV_TYPES = ['poly_cnv_v4']
+CNV_TYPES = ['CNV_20170307', 'CX_20170307_cnv']
+# CNV_TYPES = ['CX_20170307_cnv']
+
+with open(config['genelists']) as glist:
+    GENELISTS = [l.strip() for l in glist]
+
+with open(config['noncoding']) as nlist:
+    NONCODING_PATHS = {}
+    for line in nlist:
+        name, path = line.strip().split()
+        NONCODING_PATHS[name] = path
+    NONCODING_LISTS = list(NONCODING_PATHS.keys())
+
+rule all:
+    input:
+        expand('cnv_anno/{variant}.annotations.txt', variant=CNV_TYPES),
+        expand('cnv_anno/{variant}.gene_annotations.txt', variant=CNV_TYPES),
+        expand('genelist_anno/{variant}.{genelist}.annotations.txt',
+               variant=CNV_TYPES, genelist=GENELISTS),
+        expand('noncoding_merged/{variant}.noncoding.txt',
+               variant=CNV_TYPES)
+
+
+wildcard_constraints:
+    variant='(' + '|'.join(CNV_TYPES + CX_CNV_TYPES) + ')'
+
+
+rule reformat_cnv_intervals:
+    input:
+        lambda wildcards: config['variants'][wildcards.variant]
+    output:
+        'cnv_segments/{variant}.bed'
+    shell:
+        """
+        sed -e '/^#/d' {input} | cut -f -4 | sort -k1,1V -k2,2n | uniq > {output}
+        """
+
+rule annotate_cnv_exon_hits:
+    input:
+        bed='cnv_segments/{variant}.bed',
+        exons=config['ref']['exons']
+    output:
+        'cnv_anno/{variant}.exons.txt'
+    shell:
+        """
+        bedtools intersect -a {input.bed} -b {input.exons} -wa -wb \
+            | cut -f4,8 | sort | uniq > {output}
+        """
+
+rule annotate_cnv_intron_hits:
+    input:
+        bed='cnv_segments/{variant}.bed',
+        exon_hits='cnv_anno/{variant}.exons.txt',
+        genes=config['ref']['genes']
+    output:
+        'cnv_anno/{variant}.introns.txt'
+    shell:
+        """
+        cat {input.exon_hits} \
+            | cut -f 1 \
+            | gfgrep -v -w -f - {input.bed} \
+            | bedtools intersect -a stdin -b {input.genes} -wa -wb \
+            | cut -f4,8 | sort | uniq > {output}
+        """
+
+rule annotate_cnv_intergenic_hits:
+    input:
+        bed='cnv_segments/{variant}.bed',
+        exon_hits='cnv_anno/{variant}.exons.txt',
+        intron_hits='cnv_anno/{variant}.introns.txt',
+    output:
+        'cnv_anno/{variant}.intergenic.txt'
+    shell:
+        """
+        cat {input.exon_hits} {input.intron_hits} \
+            | cut -f 1 \
+            | gfgrep -v -w -f - {input.bed} \
+            | awk -v OFS="\\t" '{{print $4, "."}}' \
+            > {output}
+        """
+
+rule make_cnv_disruptions:
+    input:
+        exons='cnv_anno/{variant}.exons.txt',
+        introns='cnv_anno/{variant}.introns.txt'
+    output:
+        'cnv_anno/{variant}.disruption_types.txt'
+    shell:
+        """
+        cat \
+          <(awk -v OFS="\\t" '{{print $0, "DISRUPTING"}}' {input.exons}) \
+          <(awk -v OFS="\\t" '{{print $0, "INTRONIC"}}' {input.introns}) \
+          | sort -k1,1 > {output}
+        """
+
+rule pivot_hits:
+    input:
+        bed='cnv_segments/{variant}.bed',
+        disruptions='cnv_anno/{variant}.disruption_types.txt'
+    output:
+        'cnv_anno/{variant}.gene_annotations.txt'
+    shell:
+        """
+        ./scripts/pivot_bca.py --delim "___" {input.disruptions} {input.bed} {output}
+        """
+
+rule merge_variants:
+    input:
+        variants=lambda wildcards: config['variants'][wildcards.variant],
+        anno='cnv_anno/{variant}.gene_annotations.txt'
+    output:
+        'annotated_variants/{variant}.bed'
+    run:
+        variants = pd.read_table(input.variants)
+        anno = pd.read_table(input.anno)
+
+        var_names = '#chrom start end name svtype samples'.split()
+        anno_names = 'name DISRUPTING INTRONIC'.split()
+        
+        variants = pd.merge(variants[var_names], anno[anno_names],
+                            on='name', how='left')
+        variants = variants.rename(columns=dict(DISRUPTING='exonic',
+                                                INTRONIC='intronic',
+                                                chr='#chr'))
+        variants.to_csv(output[0], sep='\t', index=False)

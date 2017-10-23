@@ -1,0 +1,9 @@
+# Ignore module data
+petest/*
+pe_counts/
+whitelists
+petest_no_tlocs/
+petest_allosomes/
+
+# Ignore cluster logs
+logs/*

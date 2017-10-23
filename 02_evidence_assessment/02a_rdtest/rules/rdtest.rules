@@ -1,0 +1,166 @@
+
+import numpy as np
+import pandas as pd
+
+AUTOSOMES = [str(x) for x in range(1, 23)]
+ALLOSOMES = 'X Y'.split()
+
+def input_bed(wildcards):
+    path='{input_beds}/{batch}.{source}.{chrom}.bed'
+    path = path.format(input_beds=config['input_beds'], batch=wildcards.batch,
+                       source=wildcards.source, chrom=wildcards.chrom)
+    return path
+
+def get_num_splits(wildcards):
+    """Calculate minimum required suffix length to accomodate variants"""
+    bed = input_bed(wildcards)
+    with open(bed) as bedfile:
+        for i, l in enumerate(bedfile):
+            pass
+    lines = i + 1
+    n_splits = np.ceil(lines / config['rdtest_split_size'])
+    return n_splits
+
+def get_suffix_len(wildcards):
+    return max(int(np.ceil(np.log10(get_num_splits(wildcards)))), 1)
+
+
+def rdtest_splits(wildcards):
+    n_splits = get_num_splits(wildcards)
+    suffix_len = get_suffix_len(n_splits)
+    splits = ['%d'.format(i).zfill(suffix_len) for i in range(n_splits)]
+
+    fpath = 'split_rdtest/{batch}.{source}.{chrom}.{{split}}.metrics'
+    import ipdb
+    ipdb.set_trace()
+    fpath = fpath.format(**wildcards)
+    return expand(fpath, split=splits)
+    
+
+rule split_beds:
+    input:
+        bed=input_bed
+    output:
+        splits=dynamic('split_beds/{batch}.{source}.{chrom}.{split}')
+    params:
+        prefix='split_beds/{batch}.{source}.{chrom}.',
+        lines=config['rdtest_split_size'],
+        suffix_len=get_suffix_len
+    shell:
+        """
+        sed '/^#/d' {input.bed} \
+          | split -a {params.suffix_len} -d -l {params.lines} - {params.prefix}
+        """
+
+# TODO: generate blacklist from batch key
+rule RdTest_autosomes:
+    input:
+        bed='split_beds/{batch}.{source}.{chrom}.{split}',
+    output:
+        metrics='split_rdtest/{batch}.{source}.{chrom}.{split}.metrics',
+    params:
+        whitelist='whitelists/{batch}.list'
+    wildcard_constraints:
+        chrom='(' + '|'.join(AUTOSOMES) + ')'
+    shell:
+         """
+         Rscript {config[rdtest]} \
+           -b {input.bed} \
+           -o split_rdtest/ \
+           -n {wildcards.batch}.{wildcards.source}.{wildcards.chrom}.{wildcards.split} \
+           -c {config[coveragefile]} \
+           -m {config[medianfile]} \
+           -f {config[famfile]} \
+           -w {params.whitelist}
+         """
+
+rule merge_rdtest_autosomes:
+    input:
+        rdtest_splits
+#dynamic('split_rdtest_autosomes/{batch}.{source}.{chrom}.{split}.metrics')
+    output:
+        'rdtest/{batch}.{source}.{chrom}.metrics'
+    shell:
+        """
+        cat {input} \
+          | sed -r -e '/^chr\\s/d' \
+          | sort -k1,1V -k2,2n \
+          | cat <(head -n1 {input[0]}) - \
+          > {output}
+        """
+
+# rule make_sex_whitelists:
+    # input:
+        # whitelist='whitelists/{batch}.list'
+    # output:
+        # whitelist='sexlists/{batch}.{sex}.list'
+    # params:
+        # sex=lambda wildcards: 1 if wildcards.sex == 'males' else 2
+    # shell:
+        # """
+        # awk '($5=={params.sex}) {{print $2}}' {config[famfile]} \
+          # | fgrep -w -f - {input.whitelist} \
+          # > {output.whitelist};
+        # """
+
+rule RdTest_allosomes:
+    input:
+        bed='split_beds/{batch}.{source}.{chrom}.{split}',
+    output:
+        metrics='sex_split_rdtest/{batch}.{source}.{chrom}.{split}.{sex}.metrics',
+    wildcard_constraints:
+        chrom='(' + '|'.join(ALLOSOMES) + ')'
+    params:
+        whitelist='whitelists/{batch}.{sex}.list'
+    shell:
+         """
+         Rscript {config[rdtest]} \
+           -b {input.bed} \
+           -o sex_split_rdtest/ \
+           -n {wildcards.batch}.{wildcards.source}.{wildcards.chrom}.{wildcards.split}.{wildcards.sex} \
+           -c {config[coveragefile]} \
+           -m {config[medianfile]} \
+           -f {config[famfile]} \
+           -w {params.whitelist}
+         """
+
+rule merge_rdtest_Y:
+    input:
+        males='sex_split_rdtest/{batch}.{source}.{chrom}.{split}.males.metrics',
+    wildcard_constraints:
+        chrom='Y'
+    output:
+        metrics='split_rdtest/{batch}.{source}.{chrom}.{split}.metrics'
+    shell:
+        """cp {input.males} {output.metrics}"""
+
+rule merge_rdtest_X:
+    input:
+        males='sex_split_rdtest/{batch}.{source}.{chrom}.{split}.males.metrics',
+        females='sex_split_rdtest/{batch}.{source}.{chrom}.{split}.females.metrics',
+    wildcard_constraints:
+        chrom='X'
+    output:
+        'split_rdtest/{batch}.{source}.{chrom}.{split}.metrics'
+    run:
+        males = pd.read_table(input.males)
+        females = pd.read_table(input.females)
+        male_only = females.P == 'No_samples_for_analysis'
+        females.loc[male_only] = males
+        females.to_csv(output[0], sep='\t', index=False)
+
+
+rule merge_rdtest_allosomes:
+    input:
+        rdtest_splits
+#dynamic('split_rdtest/{batch}.{source}.{chrom}.{split}.metrics')
+    output:
+        'rdtest/{batch}.{source}.{chrom}.metrics'
+    wildcard_constraints:
+        chrom='(' + '|'.join(ALLOSOMES) + ')'
+    run:
+        dfs = []
+        for fname in input:
+            dfs.append(pd.read_table(fname))
+        df = pd.concat(dfs)
+        df.to_csv(output[0], sep='\t', index=False)

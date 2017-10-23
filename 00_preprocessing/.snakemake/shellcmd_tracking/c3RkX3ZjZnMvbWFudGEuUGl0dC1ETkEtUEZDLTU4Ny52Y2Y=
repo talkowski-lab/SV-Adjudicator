@@ -1,0 +1,3 @@
+
+        svtools standardize data/raw_vcfs/manta/manta.Pitt-DNA-PFC-587.vcf.gz std_vcfs/manta.Pitt-DNA-PFC-587.vcf manta
+        

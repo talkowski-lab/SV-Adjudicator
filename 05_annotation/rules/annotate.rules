@@ -1,0 +1,16 @@
+
+rule annotate:
+    input:
+        vcf='vcfs/variants.{chrom}.vcf.gz',
+        gencode='gencode/gencode.canonical_annotation.gtf.gz',
+        noncoding='noncoding/noncoding_elements.bed'
+    output:
+        vcf='annotated_vcfs/variants.{chrom}.vcf'
+    shell:
+        """
+        svtools annotate \
+          --gencode {input.gencode} \
+          --noncoding {input.noncoding} \
+          {input.vcf} \
+          {output.vcf}
+        """

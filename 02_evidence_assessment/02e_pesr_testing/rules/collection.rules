@@ -1,0 +1,127 @@
+
+with open(config['chroms']) as clist:
+    CHROMS = [c.strip() for c in clist.readlines()]
+
+with open(config['bam_map']) as bamlist:
+    BAM_MAP = {}
+    for line in bamlist:
+        sample, bam = line.strip().split()
+        BAM_MAP[sample] = bam
+
+rule compile_helpers:
+    output:
+        dynamic('scripts/helpers.{platform}.so')
+    shell:
+        """
+        cd scripts;
+        python setup.py build_ext --inplace
+        """
+
+# Force iterative counting over chromosomes to prevent too many simultaneous
+# queries to same BAM
+def recurse_counts(wildcards):
+    chrom = wildcards.chrom
+
+    path = '{outdir}/{{chrom}}/{sample}.txt.gz'
+    path = path.format(sample=wildcards.sample, outdir=wildcards.outdir)
+
+    idx = CHROMS.index(chrom)
+    chroms = CHROMS[:idx]
+
+    return [path.format(chrom=chrom) for chrom  in chroms]
+ 
+rule count_splits:
+    input:
+        recurse_counts if config['recurse_counts'] else ''
+    output:
+        '{outdir}/{chrom}/{sample}.txt.gz'
+    params:
+        index_dir=config['bam_indexes']
+    wildcard_constraints:
+        outdir="split_counts"
+    shell:
+        """
+        fout=$(readlink -f {output});
+        count_splits=$(readlink -f scripts/count_splits.py);
+        cd {params.index_dir};
+        $count_splits -r {wildcards.chrom} $(s3bam {wildcards.sample}) stdout \
+          | bgzip -c > $fout
+        """
+    
+rule count_disc:
+    input:
+        recurse_counts
+    output:
+        '{outdir}/{chrom}/{sample}.txt.gz'
+    params:
+        index_dir=config['bam_indexes'],
+        bam=lambda wildcards: BAM_MAP[wildcards.sample]
+    wildcard_constraints:
+        outdir="disc_counts"
+    shell:
+        """
+        fout=$(readlink -f {output});
+        count_disc=$(readlink -f scripts/count_disc.py);
+        cd {params.index_dir};
+        $count_disc -s {wildcards.sample} -r {wildcards.chrom} {params.bam} \
+          | sort -k1,1V -k2,2n -k5,5n \
+          | bgzip -c > $fout
+        """
+
+rule count_tloc:
+    input:
+        recurse_counts
+    output:
+        '{outdir}/{chrom}/{sample}.txt.gz'
+    params:
+        index_dir=config['bam_indexes'],
+        bam=lambda wildcards: BAM_MAP[wildcards.sample]
+    wildcard_constraints:
+        outdir='tloc_counts'
+    shell:
+        """
+        fout=$(readlink -f {output});
+        count_disc=$(readlink -f scripts/count_disc.py);
+        cd {params.index_dir};
+        $count_disc --tloc -s {wildcards.sample} -r {wildcards.chrom} {params.bam} \
+          | sort -k1,1V -k2,2n -k5,5n \
+          | bgzip -c > $fout
+        """
+
+rule filter:
+    input:
+        '{outdir}/{chrom}/{sample}.txt.gz'
+    output:
+        '{outdir}_filtered/{chrom}/{sample}.txt.gz'
+    params:
+        whitelist=config['whitelist']
+    shell:
+        """
+        tabix -s1 -b2 -e2 {input};
+        tabix -R {params.whitelist} {input} | bgzip -c > {output};
+        tabix -s1 -b2 -e2 {output};
+        """
+
+rule merge_disc_tloc:
+    input:
+        disc='disc_counts_filtered/{chrom}/{sample}.txt.gz',
+        tloc='tloc_counts_filtered/{chrom}/{sample}.txt.gz'
+    output:
+        'sample_counts/{chrom}/{sample}.txt.gz'
+    shell:
+        """
+        sort -m -k1,1V -k2,2n -k4,4V -k5,5n \
+          <(bgzip -d -c {input.disc}) \
+          <(bgzip -d -c {input.tloc}) \
+          | bgzip -c > {output}
+        """
+
+#rule merge_samples:
+#    input:
+#        expand('sample_counts/{{chrom}}/{sample}.txt.gz', sample=SAMPLES)
+#    output:
+#        'merged_counts/cohort.{chrom}.txt.gz'
+#    shell:
+#        """
+#        ./scripts/merge_samples.sh {config[samples]} {wildcards.chrom}
+#        """

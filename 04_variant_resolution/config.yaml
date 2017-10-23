@@ -1,0 +1,49 @@
+# Data subdirectory
+workdir: ssc_20170825_v2
+rootdir: .
+scripts: scripts
+
+# Key
+batches: ../ref/batch.key
+samples:
+    Phase1: /data/talkowski/Samples/SFARI/deep_sv/asc_540/sv-pipeline/ref/samples.Phase1.list
+    Pilot: /data/talkowski/Samples/SFARI/deep_sv/asc_540/sv-pipeline/ref/samples.Pilot.list
+
+# Subsets to analyze
+chroms: ref/chroms.all.list
+# chroms: ref/chroms.allosomes.list
+pesr_sources:
+    - delly
+    - lumpy
+    - manta
+    - wham
+
+# Input from prior modules
+# input_vcfs: ../01_algorithm_integration/vcfcluster/
+filtered_vcfs: ../03_variant_filtering/filtered_vcfs/
+
+# PE/SR clustering parameters
+vcfcluster:
+    pesr:
+        dist: 300
+        frac: 0.1
+        blacklist: ../ref/b37.lumpy.exclude.4-13.bed.gz
+        svsize: 0
+        svtypes: DEL,DUP,INV,BND
+    pesr_depth:
+        dist: 2000000
+        frac: 0.8
+        blacklist: ../ref/b37.lumpy.exclude.4-13.bed.gz
+        svsize: 0
+        svtypes: DEL,DUP,INV,BND
+
+rdtest: /PHShome/my520/code/RdTest/RdTest.R
+coveragefile: /data/talkowski/Samples/SFARI/deep_sv/asc_540/bincov/matrices/ASC540.all.binCov.raw.bed.gz
+medianfile: /data/talkowski/Samples/SFARI/deep_sv/asc_540/bincov/matrices/ASC540.all.binCov.median
+famfile: /data/talkowski/Samples/SFARI/lists/SFARI.519.fam
+pe_counts: '../02_evidence_assessment/02b_petest/pe_counts/cohort.txt.gz'
+sr_counts: '../../pesr_testing/split_counts/cohort.txt.gz'
+
+cutoffs:
+    Phase1: /data/talkowski/Samples/SFARI/deep_sv/asc_540/sv-pipeline/04_variant_resolution/Phase1.cutoffs.txt
+    Pilot: /data/talkowski/Samples/SFARI/deep_sv/asc_540/sv-pipeline/04_variant_resolution/Pilot.cutoffs.txt

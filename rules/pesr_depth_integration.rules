@@ -1,0 +1,118 @@
+"""
+pesr_rd.snake
+Matthew Stone
+
+Pipeline for merging PE/SR and RD calls.
+
+Defaults to using coordinates of PE/SR calls when overlap exists.
+"""
+
+with open(config['samples']) as slist:
+    SAMPLES = [s.strip() for s in slist.readlines()]
+
+with open(config['chroms']) as clist:
+    CHROMS = [c.strip() for c in clist.readlines()]
+
+rule pesr_depth_intersection:
+    input:
+        pesr='integration/pesr/rdtest_filtered/cohort.{chrom}.bed',
+        depth='integration/depth/rdtest_filtered/cohort.{chrom}.bed',
+    output:
+        'integration/pesr_depth/intersection/cohort.{chrom}.bed'
+    params:
+        frac=0.8
+    shell:
+        """
+        bedtools intersect -wa -wb -loj -r -f {params.frac} \
+            -a <(cut -f -6 {input.pesr} | sort -k1,1V -k2,2n) \
+            -b <(cut -f -6 {input.depth} | sort -k1,1V -k2,2n) \
+          | awk '($5==$11 && $6==$12)' \
+          > {output}
+        """
+          
+rule get_pesr_depth_links:
+    input:
+        pesr_depth='integration/pesr_depth/intersection/cohort.{chrom}.bed',
+    output:
+        'integration/pesr_depth/pesr_depth_links.{chrom}.txt'
+    shell:
+        """
+        cut -f4,10 {input} | sort | uniq > {output}
+        """
+
+rule get_signal_specific_calls:
+    input:
+        pesr='integration/pesr/rdtest_filtered/cohort.{chrom}.bed',
+        depth='integration/depth/rdtest_filtered/cohort.{chrom}.bed',
+        links='integration/pesr_depth/pesr_depth_links.{chrom}.txt'
+    output:
+        pesr='integration/pesr_depth/signal_specific_calls/cohort.pesr_only.{chrom}.bed',
+        depth='integration/pesr_depth/signal_specific_calls/cohort.depth_only.{chrom}.bed',
+    shell:
+        """
+        head -n1 {input.pesr} \
+          | awk -v OFS="\\t" '{{print $0, "pesr_name", "depth_name"}}' \
+          > {output.pesr};
+        head -n1 {input.pesr} \
+          | awk -v OFS="\\t" '{{print $0, "pesr_name", "depth_name"}}' \
+          > {output.depth};
+        cut -f1 {input.links} \
+          | sort -u \
+          | fgrep -w -v -f - {input.pesr} \
+          | sed '1d' \
+          | awk -v OFS="\\t" '{{print $1, $2, $3, $4, $5, $6, $4, "."}}' \
+          >> {output.pesr};
+        cut -f1 {input.links} \
+          | sort -u \
+          | fgrep -w -v -f - {input.depth} \
+          | sed '1d' \
+          | awk -v OFS="\\t" '{{print $1, $2, $3, $4, $5, $6, ".", $4}}' \
+          >> {output.depth};
+        """
+
+rule get_signal_specific_variants:
+    input:
+        'integration/pesr_depth/signal_specific_calls/cohort.{source}_only.{chrom}.bed'
+    output:
+        'integration/pesr_depth/signal_specific_variants/cohort.{source}_only.{chrom}.bed'
+    run:
+        import pandas as pd
+        calls = pd.read_table(input[0])
+        cols = '#chrom start end name svtype pesr_name depth_name'.split()
+        variants = calls[cols].drop_duplicates()
+        samples = calls.groupby('name')['sample']\
+                       .agg(lambda s: ','.join(sorted(set(s))))\
+                       .rename('samples').reset_index()
+        variants = pd.merge(variants, samples, on='name', how='left')
+        cols = '#chrom start end name svtype samples pesr_name depth_name'.split()
+        variants[cols].to_csv(output[0], sep='\t', index=False)
+        
+rule get_pesr_depth_variants:
+    input:
+        pesr='integration/pesr/rdtest_filtered/cohort.{chrom}.bed',
+        depth='integration/depth/rdtest_filtered/cohort.{chrom}.bed',
+        links='integration/pesr_depth/pesr_depth_links.{chrom}.txt'
+    output:
+        'integration/pesr_depth/signal_specific_variants/cohort.pesr_depth.{chrom}.bed'
+    script:
+        "scripts/get_pesr_depth_calls.py"
+        
+
+rule combine_signal_variants:
+    input:
+        'integration/pesr_depth/signal_specific_variants/cohort.pesr_depth.{chrom}.bed',
+        'integration/pesr_depth/signal_specific_variants/cohort.pesr_only.{chrom}.bed',
+        'integration/pesr_depth/signal_specific_variants/cohort.depth_only.{chrom}.bed'
+    output:
+        bed='integration/pesr_depth/variants/cohort.{chrom}.bed.gz',
+        idx='integration/pesr_depth/variants/cohort.{chrom}.bed.gz.tbi',
+    shell:
+        """
+        cat {input} \
+          | sed '/^#chrom/d' \
+          | sort -k1,1V -k2,2n \
+          | cat <(head -n1 {input[0]}) - \
+          | bgzip -c \
+          > {output.bed};
+        tabix -p bed {output.bed}
+        """

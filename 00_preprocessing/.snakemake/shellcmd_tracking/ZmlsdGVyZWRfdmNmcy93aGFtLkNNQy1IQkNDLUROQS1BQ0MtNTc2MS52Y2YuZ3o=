@@ -1,0 +1,4 @@
+
+        vcf-sort -c filtered_vcfs/wham.CMC-HBCC-DNA-ACC-5761.vcf | bgzip -c > filtered_vcfs/wham.CMC-HBCC-DNA-ACC-5761.vcf.gz;
+        tabix -p vcf filtered_vcfs/wham.CMC-HBCC-DNA-ACC-5761.vcf.gz
+        

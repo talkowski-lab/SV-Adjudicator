@@ -1,0 +1,13 @@
+__default__:
+    queue: short
+    log: "logs/{rule}.{wildcards}.out"
+    jobname: "{rule}.{wildcards}"
+    flags: ""
+vcfcluster:
+    queue: normal
+bedcluster:
+    queue: big
+    flags: "-R 'rusage[mem=96000]' -M 96000 -v 96000"
+make_depth_rdtest_beds:
+    queue: big
+    flags: "-R 'rusage[mem=96000]' -M 96000 -v 96000"

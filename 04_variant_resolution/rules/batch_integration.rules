@@ -1,0 +1,37 @@
+
+rule overlap_pass:
+    input:
+        phase1='filtered_vcfs/Phase1.{source}.{chrom}.vcf.gz',
+        pilot=os.path.join(config['input_vcfs'], 'Pilot.{source}.{chrom}.vcf.gz')
+    output:
+        'phase1_pilots/{source}.{chrom}.vcf.gz'
+    shell:
+        """
+        ./scripts/overlap_pass.py {input.phase1} {input.pilots} stdout \
+          | bgzip -c > {output}
+        """
+
+rule overlap_fail:
+    input:
+        phase1='fails/Phase1.{source}.{chrom}.vcf.gz',
+        pilot='filtered_vcfs/Pilot.{source}.{chrom}.vcf.gz',
+    output:
+        'pilot_only/{source}.{chrom}.vcf.gz'
+    shell:
+        """
+        ./scripts/overlap_fail.py {input.phase1} {input.pilots} stdout \
+          | bgzip -c > {output}
+        """
+
+rule merge:
+    input:
+        phase1='phase1_pilots/{source}.{chrom}.vcf.gz'
+        pilots='pilot_only/{source}.{chrom}.vcf.gz'
+    output:
+        vcf='batch_merged/{source}.{chrom}.vcf.gz'
+        tbi='batch_merged/{source}.{chrom}.vcf.gz.tbi'
+    shell:
+        """
+        vcf-concat {input} | vcf-sort -c | bgzip -c > {output.vcf};
+        tabix -p vcf {output.vcf}
+        """

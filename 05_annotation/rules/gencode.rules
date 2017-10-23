@@ -1,0 +1,30 @@
+
+
+rule get_canonical_transcripts:
+    output:
+        transcripts='gencode/gencode.canonical_transcripts.txt'
+    shell:
+        """
+        ./scripts/get_canonical_transcripts.py \
+          {config[gencode][annotation_gtf]} \
+          {config[gencode][pc_translations_fa]} \
+          {config[gencode][pc_transcripts_fa]} \
+          {config[gencode][transcript_source]} \
+          {output.transcripts}
+        """
+
+rule make_canonical_gtf:
+    input:
+        canon='gencode/gencode.canonical_transcripts.txt',
+    output:
+        gtf='gencode/gencode.canonical_annotation.gtf.gz'
+    shell:
+        """
+        cat \
+            <(cut -f2 {input.canon} | sed -e '1d' | fgrep -w -f - <(zcat {config[gencode][annotation_gtf]})) \
+            <(cut -f1 {input.canon} | sed -e '1d' | fgrep -w -f - <(zcat {config[gencode][annotation_gtf]}) | awk '($3=="gene")') \
+          | sort -k1,1V -k4,4n \
+          | sed -e 's/^chr//' \
+          | bgzip -c \
+          > {output.gtf}
+        """

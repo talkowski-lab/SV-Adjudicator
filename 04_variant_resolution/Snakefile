@@ -1,0 +1,49 @@
+
+configfile: 'config.yaml'
+
+# Data subdirectory requested
+if config.get('workdir') is not None:
+    if config.get('rootdir') is None or config.get('rootdir') == '.':
+        config['rootdir'] = os.getcwd()
+    else:
+        config['rootdir'] = os.path.abspath(config['rootdir'])
+    
+    # Get absolute paths to any configuration files
+    for k, v in config.items():
+        if isinstance(v, str) and os.path.exists(v):
+            config[k] = os.path.abspath(v)
+
+    # Make LSF log directory
+    logdir = os.path.join(config['workdir'], 'logs')
+    if not os.path.exists(logdir):
+        os.makedirs(logdir)
+    
+    workdir: config['workdir']
+
+include: 'rules/algorithm_integration.rules'
+include: 'rules/dn-check.rules'
+
+import pandas as pd
+
+BATCH_KEY = pd.read_table(config['batches'], dtype=str)
+BATCHES = sorted(BATCH_KEY.batch.unique())
+# BATCHES = ['Phase1']
+# BATCHES = ['Pilot']
+
+with open(config['chroms']) as clist:
+    CHROMS = [c.strip() for c in clist.readlines()]
+
+SOURCES = config['pesr_sources'] + ['depth']
+
+wildcard_constraints:
+    source='(' + '|'.join(SOURCES) + ')',
+    chrom='(' + '|'.join(CHROMS) + ')',
+    batch='(' + '|'.join(BATCHES) + ')'
+
+rule all:
+    input:
+        expand('merged_vcfs/{batch}.alg_merged.vcf.gz', batch=BATCHES),
+        expand('denovo/filtered_vcfs/{batch}.{chrom}.vcf.gz',
+               batch=BATCHES, chrom=CHROMS)
+#         expand('complex_linking/{batch}.{chrom}.resolved.vcf',
+#                batch=BATCHES, chrom=CHROMS)

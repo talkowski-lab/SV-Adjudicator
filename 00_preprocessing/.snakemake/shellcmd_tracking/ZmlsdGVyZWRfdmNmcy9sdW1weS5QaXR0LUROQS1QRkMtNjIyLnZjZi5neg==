@@ -1,0 +1,4 @@
+
+        vcf-sort -c filtered_vcfs/lumpy.Pitt-DNA-PFC-622.vcf | bgzip -c > filtered_vcfs/lumpy.Pitt-DNA-PFC-622.vcf.gz;
+        tabix -p vcf filtered_vcfs/lumpy.Pitt-DNA-PFC-622.vcf.gz
+        

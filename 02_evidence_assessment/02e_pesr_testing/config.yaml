@@ -1,0 +1,17 @@
+# Input intervals to plot
+bed: sr_testing.completed.with_bg.bed
+bam_indexes: bam_indexes
+
+bam_map: ref/sample_bams.list       # Two column map {sample: bam}
+recurse_counts: False               # Don't run per-sample contigs in parallel
+
+samples: ref/samples.2076.list
+chroms: ref/chroms.all.list
+#samples: ref/samples.test.list
+#chroms: ref/chroms.test.list
+quads: ref/quads.519.list
+
+window: 250
+min_splits: 1
+
+whitelist: ref/b37.lumpy.include.4-13.bed.gz

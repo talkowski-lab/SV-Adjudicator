@@ -1,0 +1,4 @@
+
+        vcf-sort -c filtered_vcfs/manta.Penn-DNA-PFC-061.vcf | bgzip -c > filtered_vcfs/manta.Penn-DNA-PFC-061.vcf.gz;
+        tabix -p vcf filtered_vcfs/manta.Penn-DNA-PFC-061.vcf.gz
+        

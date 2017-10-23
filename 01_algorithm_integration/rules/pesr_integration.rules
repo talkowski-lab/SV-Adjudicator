@@ -1,0 +1,87 @@
+"""
+pesr_integration.rules
+Matthew Stone <mstone5@mgh.harvard.edu>
+
+Cluster SV called by PE/SR-based algorithms. 
+"""
+
+import pandas as pd
+
+with open(config['groups']) as glist:
+    GROUPS = [g.strip() for g in glist.readlines()]
+
+PESR_SOURCES = config['pesr_sources']
+MEI_SOURCES = config['mei_sources']
+
+BATCH_KEY = pd.read_table(config['batches'], dtype=str)
+BATCHES = sorted(BATCH_KEY.batch.unique())
+
+# Samples are processed in subgroups of each batch
+def get_batch_vcfs(wildcards):
+    batch = wildcards.batch
+    groups = BATCH_KEY.loc[BATCH_KEY.batch == batch, 'group'].unique()
+    groups = [g for g in groups if g in GROUPS]
+    
+    vcf_path = os.path.join('{input_vcfs}', '{source}.{group}.vcf.gz')
+
+    return [vcf_path.format(source=wildcards.source, group=group,
+                            input_vcfs=config['input_vcfs']) 
+            for group in groups]
+
+# Make list of VCFs for each batch/source combo
+rule make_vcf_list:
+    input:
+        get_batch_vcfs
+    output:
+        vcflist='vcflists/{batch}.{source}.list'
+    run:
+        with open(output[0], 'w') as fout:
+            for fname in sorted(input):
+                fout.write(fname + '\n')
+
+def svtypes(wildcards):
+    if wildcards.source in PESR_SOURCES:
+        return config['svtypes']['pesr']
+    else:
+        return config['svtypes']['mei']
+
+# Cluster all VCFs in a batch from a given algorithm
+rule vcfcluster:
+    """Cluster calls from a single algorithm across samples."""
+    input:
+        vcflist=rules.make_vcf_list.output.vcflist
+    output:
+        vcf='vcfcluster/{batch}.{source}.{chrom}.vcf.gz',
+        tbi='vcfcluster/{batch}.{source}.{chrom}.vcf.gz.tbi',
+    wildcard_constraints:
+        source='(' + '|'.join(MEI_SOURCES + PESR_SOURCES) + ')'
+    params:
+        **config['vcfcluster'],
+        svtypes=svtypes,
+        prefix=lambda wildcards: '{0}_{1}'.format(wildcards.batch, wildcards.source)
+    shell:
+        """
+        svtools vcfcluster {input} stdout \
+            -r {wildcards.chrom} \
+            -p {params.prefix} \
+            -d {params.dist} \
+            -f {params.frac} \
+            -x {params.blacklist} \
+            -z {params.svsize} \
+            -t {params.svtypes} \
+            {params.flags} \
+          | vcf-sort -c \
+          | bgzip -c > {output.vcf};
+        tabix -p vcf {output.vcf};
+        """
+
+# Convert to RdTest format
+rule make_pesr_rdtest_beds:
+    input:
+        vcf=rules.vcfcluster.output.vcf
+    output:
+        bed='rdtest_beds/{batch}.{source}.{chrom}.bed'
+    wildcard_constraints:
+        source='(' + '|'.join(PESR_SOURCES) + ')'
+    shell:
+        "./scripts/make_pesr_rdtest_bed.py {input} {output}"

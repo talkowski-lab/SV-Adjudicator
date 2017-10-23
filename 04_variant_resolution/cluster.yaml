@@ -1,0 +1,13 @@
+__default__:
+    queue: short
+    log: "logs/{rule}.{wildcards}.out"
+    jobname: "{rule}.{wildcards}"
+    flags: ""
+vcfcluster:
+    queue: normal
+link_cpx:
+    queue: normal
+rd_dn_check:
+    queue: normal
+pesr_dn_check:
+    queue: normal
