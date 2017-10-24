@@ -1,4 +1,0 @@
-
-        vcf-sort -c filtered_vcfs/manta.MSSM-DNA-PFC-380.vcf | bgzip -c > filtered_vcfs/manta.MSSM-DNA-PFC-380.vcf.gz;
-        tabix -p vcf filtered_vcfs/manta.MSSM-DNA-PFC-380.vcf.gz
-        

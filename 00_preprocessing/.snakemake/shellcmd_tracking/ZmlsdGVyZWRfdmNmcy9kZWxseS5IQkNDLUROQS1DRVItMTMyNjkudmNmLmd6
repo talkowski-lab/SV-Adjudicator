@@ -1,4 +1,0 @@
-
-        vcf-sort -c filtered_vcfs/delly.HBCC-DNA-CER-13269.vcf | bgzip -c > filtered_vcfs/delly.HBCC-DNA-CER-13269.vcf.gz;
-        tabix -p vcf filtered_vcfs/delly.HBCC-DNA-CER-13269.vcf.gz
-        

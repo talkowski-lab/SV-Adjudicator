@@ -1,4 +1,0 @@
-
-        vcf-sort -c filtered_vcfs/delly.Pitt-DNA-PFC-625.vcf | bgzip -c > filtered_vcfs/delly.Pitt-DNA-PFC-625.vcf.gz;
-        tabix -p vcf filtered_vcfs/delly.Pitt-DNA-PFC-625.vcf.gz
-        

@@ -1,4 +1,0 @@
-
-        vcf-sort -c filtered_vcfs/lumpy.MSSM-DNA-PFC-106.vcf | bgzip -c > filtered_vcfs/lumpy.MSSM-DNA-PFC-106.vcf.gz;
-        tabix -p vcf filtered_vcfs/lumpy.MSSM-DNA-PFC-106.vcf.gz
-        

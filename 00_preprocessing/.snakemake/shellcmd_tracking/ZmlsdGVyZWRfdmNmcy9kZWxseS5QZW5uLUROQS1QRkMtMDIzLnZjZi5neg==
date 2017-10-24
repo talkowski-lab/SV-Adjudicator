@@ -1,4 +1,0 @@
-
-        vcf-sort -c filtered_vcfs/delly.Penn-DNA-PFC-023.vcf | bgzip -c > filtered_vcfs/delly.Penn-DNA-PFC-023.vcf.gz;
-        tabix -p vcf filtered_vcfs/delly.Penn-DNA-PFC-023.vcf.gz
-        

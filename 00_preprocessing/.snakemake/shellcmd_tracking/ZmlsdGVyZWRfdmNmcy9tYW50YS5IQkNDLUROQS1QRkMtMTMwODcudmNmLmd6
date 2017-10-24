@@ -1,4 +1,0 @@
-
-        vcf-sort -c filtered_vcfs/manta.HBCC-DNA-PFC-13087.vcf | bgzip -c > filtered_vcfs/manta.HBCC-DNA-PFC-13087.vcf.gz;
-        tabix -p vcf filtered_vcfs/manta.HBCC-DNA-PFC-13087.vcf.gz
-        

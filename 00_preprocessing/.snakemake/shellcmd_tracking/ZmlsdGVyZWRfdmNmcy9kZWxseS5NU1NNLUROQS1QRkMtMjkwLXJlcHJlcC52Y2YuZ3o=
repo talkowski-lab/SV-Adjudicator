@@ -1,4 +1,0 @@
-
-        vcf-sort -c filtered_vcfs/delly.MSSM-DNA-PFC-290-reprep.vcf | bgzip -c > filtered_vcfs/delly.MSSM-DNA-PFC-290-reprep.vcf.gz;
-        tabix -p vcf filtered_vcfs/delly.MSSM-DNA-PFC-290-reprep.vcf.gz
-        

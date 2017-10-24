@@ -1,4 +1,0 @@
-
-        vcf-sort -c filtered_vcfs/wham.HBCC-DNA-PFC-13074.vcf | bgzip -c > filtered_vcfs/wham.HBCC-DNA-PFC-13074.vcf.gz;
-        tabix -p vcf filtered_vcfs/wham.HBCC-DNA-PFC-13074.vcf.gz
-        

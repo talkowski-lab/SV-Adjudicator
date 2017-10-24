@@ -1,4 +1,0 @@
-
-        vcf-sort -c filtered_vcfs/wham.HBCC-DNA-CER-13212.vcf | bgzip -c > filtered_vcfs/wham.HBCC-DNA-CER-13212.vcf.gz;
-        tabix -p vcf filtered_vcfs/wham.HBCC-DNA-CER-13212.vcf.gz
-        
