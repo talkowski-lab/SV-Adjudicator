@@ -2,7 +2,7 @@
 
 This repository contains the workflow that evaluates read-depth support for all CNV calls on a per-batch basis.
 
-## required matrics
+## Required matrics
 
 Two matrics are required to process the RdTest: the Matrics.binCov.bed.gz and Matrics.binCov.median
 
@@ -45,13 +45,13 @@ names of input files are in this format: `{batch}.{source}.{chrom}.bed`, with th
 2	10000	41072	CMC_depth_DUP_2_2	CMC-HBCC-ACC-DNA-5785,CMC-HBCC-DNA-ACC-4021,CMC-HBCC-DNA-ACC-4023,CMC-HBCC-DNA-ACC-4029,CMC-HBCC-DNA-ACC-4031,CMC-HBCC-DNA-ACC-4044,CMC-HBCC-DNA-ACC-4046,CMC-HBCC-DNA-ACC-4048,CMC-HBCC-DNA-ACC-4051
 ```
 
-##Modify config.yaml
+## Modify config.yaml
 
 
-##Run through snakemake
+## Run through snakemake
 Just type `snakemake` under this directory and the RdTest workflow with be autonamously processed.
 
-##Run each script manually
+## Run each script manually
 It is also possible to run each step in this module manually, which allows user to process multiple jobs in parallel. 
 
 First step is to randomly split the big bed file into small beds for faster processing:
