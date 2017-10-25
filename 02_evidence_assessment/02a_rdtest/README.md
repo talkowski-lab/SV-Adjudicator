@@ -26,6 +26,7 @@ Two matrics are required to process the RdTest: the Matrics.binCov.bed.gz and Ma
 *`Matrics.binCov.median`  contains the median of bincov coverages for each individual, e.g.
 
 |CMC-HBCC-ACC-DNA-4235 | CMC-HBCC-ACC-DNA-4245 | CMC-HBCC-ACC-DNA-4265 | CMC-HBCC-ACC-DNA-5591 | CMC-HBCC-ACC-DNA-5757 | CMC-HBCC-ACC-DNA-5785 | CMC-HBCC-DNA-ACC-4021 | CMC-HBCC-DNA-ACC-4023 | CMC-HBCC-DNA-ACC-4025 | CMC-HBCC-DNA-ACC-4027 | CMC-HBCC-DNA-ACC-4029 | CMC-HBCC-DNA-ACC-4031 | CMC-HBCC-DNA-ACC-4033 |
+|-----|-------|-----|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|----------------------|
 |61 | 67 | 62 | 63 | 61 | 66 | 63 | 61 | 75 | 69 | 76 | 64 | 68 |
 
 
