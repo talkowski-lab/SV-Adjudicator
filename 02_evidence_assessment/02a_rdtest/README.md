@@ -59,10 +59,27 @@ First step is to randomly split the big bed file into small beds for faster proc
 python ./script/split_rdtest_random.py input.bed output.prefix -s number_SVs_per_bed
 ```
 
-Output from this step are output.prefix.XXX, where XXX are numbers differentiating each sub-file. Next step is to run RdTest:
+Output from this step are output.prefix.XXX, where XXX are numbers differentiating each sub-file. Next step is to run RdTest. In this step, autosomes and allosomes are treated differently, and output.prefix.XXX.metrics will be produced. 
+
+For autosomes:
+
 ```
 Rscript ./scripts/RdTest.R -b output.prefix.XXX -o output/path/ -n output.prefix.XXX  -c Matrics.binCov.bed.gz -m Matrics.binCov.median -f full_sample_list.fam
 ```
+
+For allosomes, a female whitelist containing full list of all females samples and a male list with names of all males samples should be prepared:
+```
+Rscript ./scripts/RdTest.R -b output.prefix.XXX -o output/path/ -n output.prefix.XXX.females -w female.whitelist  -c Matrics.binCov.bed.gz -m Matrics.binCov.median -f full_sample_list.fam
+Rscript ./scripts/RdTest.R -b output.prefix.XXX -o output/path/ -n output.prefix.XXX.males -w male.whitelist  -c Matrics.binCov.bed.gz -m Matrics.binCov.median -f full_sample_list.fam
+
+another script to merge male and female calls to be added here .....
+```
+
+Last step is to concatinate the sub metrics:
+```
+
+```
+
 
 
 
