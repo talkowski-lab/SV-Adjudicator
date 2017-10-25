@@ -52,6 +52,17 @@ names of input files are in this format: `{batch}.{source}.{chrom}.bed`, with th
 Just type `snakemake` under this directory and the RdTest workflow with be autonamously processed.
 
 ##Run each script manually
+It is also possible to run each step in this module manually, which allows user to process multiple jobs in parallel. 
+
+First step is to randomly split the big bed file into small beds for faster processing:
+```
+python ./script/split_rdtest_random.py input.bed output.prefix -s number_SVs_per_bed
+```
+
+Output from this step are output.prefix.XXX, where XXX are numbers differentiating each sub-file. Next step is to run RdTest:
+```
+Rscript ./scripts/RdTest.R -b output.prefix.XXX -o output/path/ -n output.prefix.XXX  -c Matrics.binCov.bed.gz -m Matrics.binCov.median -f full_sample_list.fam
+```
 
 
 
