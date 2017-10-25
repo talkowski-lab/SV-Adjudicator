@@ -183,6 +183,25 @@ loadData <- function(chr, start, end, cnvID, sampleIDs,coveragefile,medianfile,b
     #Find window bin size
     BinSize <- cov1$end[1] - cov1$start[1]
     
+    ##Find variants with with some missing bins because bincov blacklist##
+    if (nrow(cov1)< ((end-start)/BinSize)) {
+      Rfinal=round_any(end, BinSize, floor)
+      Rbeg=round_any(start, BinSize, ceiling)
+      column_start=matrix(seq(Rbeg,Rfinal,by=BinSize),ncol=1)
+      column_end=matrix(seq(Rbeg+BinSize,Rfinal+BinSize,by=BinSize),ncol=1)
+      ncov_col=ncol(cov1)
+      null_model<-cbind(chr,column_start,column_end,matrix(rep(0,times=nrow(column_start)*(ncov_col-3)),ncol=ncov_col-3))
+      colnames(null_model)<-colnames(cov1)
+      covall<-rbind(cov1,null_model)
+      cov1<-covall[!duplicated(covall[,2]),]
+      cov1<-cov1[order(cov1[,2]),]
+      cov1 <- sapply( cov1, as.numeric )
+    }
+
+    if(ncol(as.data.frame(cov1))==1){
+      return("Failure")
+    }
+        
     #Round down the number of used bins events for smaller events (e.g at 100 bp bins can't have 10 bins if event is less than 1kb)
     if ((round_any(end, BinSize, floor) - round_any(start, BinSize, ceiling)) < bins * BinSize)
     {
@@ -767,7 +786,8 @@ genotype<- function(cnv_matrix,genotype_matrix,geno_call,refgeno,chr,start,end,c
 }
 
 runRdTest<-function(bed)
-{ 
+{
+  print(bed) 
   chr<-as.character(bed[1])
   start<-as.numeric(bed[2])
   end<-as.numeric(bed[3])
@@ -801,7 +821,7 @@ runRdTest<-function(bed)
   ##Get Intesity Data##
   cnv_matrix<-loadData(chr, start, end, cnvID, sampleIDs,coveragefile,medianfile,bins)
   
-  if (cnv_matrix=="Failure") {
+  if (cnv_matrix[1]=="Failure") {
     return(c(chr,start,end,cnvID,sampleOrigIDs,cnvtypeOrigIDs,"coverage_failure","coverage_failure","coverage_failure","coverage_failure","coverage_failure","coverage_failure"))
   }
   
