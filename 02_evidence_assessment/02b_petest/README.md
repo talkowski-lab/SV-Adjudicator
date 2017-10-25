@@ -50,8 +50,8 @@ For allosomes:
 ```
 svtools pe-test --samples whitelists/{batch}.females.list ../../01_algorithm_integration/vcfcluster/{batch}.{source}.{chrom}.vcf.gz  matircs.pe.sorted.txt.gz petest_allosomes/{batch}.{source}.{chrom}.females.stats
 svtools pe-test --samples whitelists/{batch}.males.list ../../01_algorithm_integration/vcfcluster/{batch}.{source}.{chrom}.vcf.gz  matircs.pe.sorted.txt.gz petest_allosomes/{batch}.{source}.{chrom}.males.stats
-python script/merge_allosomes.py batch source chrom X
-python script/merge_allosomes.py batch source chrom Y
+python script/pe_merge_allosomes.py batch source chrom X
+python script/pe_merge_allosomes.py batch source chrom Y
 ```
 
 ## Output filesthi sformat: 
