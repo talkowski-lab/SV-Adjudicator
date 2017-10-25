@@ -33,10 +33,8 @@ tabix -b 2 -e 2 matircs.pe.sorted.txt.gz
 Input files for PeTest are produced through the 01_algorithm_integration step, and are usually kept under `../../01_algorithm_integration/vcfcluster/`. Names of input files are in this format: `{batch}.{source}.{chrom}.vcf.gz`
 
 
-## Modify config.yaml
-
 ##Run through snakemake
-Just type snakemake under this directory and the RdTest workflow with be autonamously processed.
+You can simply modify the `config.yaml` file to fit your data, and type `snakemake` under this directory to get the RdTest workflow autonamously processed.
 
 ## Run each script manually
 Autosomes and allosomes should be processed separately, with two whitelists contaning samples names of all males (whitelists/{batch}.males.list) and females(whitelists/{batch}.females.list) prepared. The whitelists have one sample name in each line. 
