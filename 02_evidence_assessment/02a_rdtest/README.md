@@ -23,7 +23,7 @@ Two matrics are required to process the RdTest: the Matrics.binCov.bed.gz and Ma
 |1 | 11000 | 11100 | 24 | 0 | 10 | 69 | 8 | 105 | 51 | 74 | 9 | 62|
 
 
-*`Matrics.binCov.median`  contains the median of bincov coverages for each individual, e.g.
+* `Matrics.binCov.median`  contains the median of bincov coverages for each individual, e.g.
 
 |#chr | start | end | sample1 | sample2 | sample3 | sample4 | sample5 | sample6 | sample7 | sample8 | sample9 | sample10 | 
 |-----|-------|-----|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|----------------------|
