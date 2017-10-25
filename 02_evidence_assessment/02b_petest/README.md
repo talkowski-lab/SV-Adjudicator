@@ -1,7 +1,7 @@
-#PeTest
+# PeTest
 This repository contains the workflow that evaluates pair-end support for all SV calls on a per-batch basis.
 
-##Required matrics
+## Required matrics
 Pe matrics should be prepared for this process. The matircs describes discordant read pairs in all individuals, and can be collectd from the aligned sequenes by following these steps:
 
 1. run `svtools collect-pesr` to collect discordant pair end information:	
@@ -29,16 +29,16 @@ bgzip -c matircs.pe.sorted.txt > matircs.pe.sorted.txt.gz
 tabix -b 2 -e 2 matircs.pe.sorted.txt.gz
 ```
 
-##Input files
+## Input files
 Input files for PeTest are produced through the 01_algorithm_integration step, and are usually kept under `../../01_algorithm_integration/vcfcluster/`. Names of input files are in this format: `{batch}.{source}.{chrom}.vcf.gz`
 
 
-##Modify config.yaml
+## Modify config.yaml
 
 ##Run through snakemake
 Just type snakemake under this directory and the RdTest workflow with be autonamously processed.
 
-##Run each script manually
+## Run each script manually
 Autosomes and allosomes should be processed separately, with two whitelists contaning samples names of all males (whitelists/{batch}.males.list) and females(whitelists/{batch}.females.list) prepared. The whitelists have one sample name in each line. 
 
 For autosomes:
@@ -54,7 +54,7 @@ python script/merge_allosomes.py batch source chrom X
 python script/merge_allosomes.py batch source chrom Y
 ```
 
-##Output filesthi sformat: 
+## Output filesthi sformat: 
 Result from this step are kept under the `petest/` folder with names in the format: `{batch}.{source}.{chrom}.stats` 
 
 
