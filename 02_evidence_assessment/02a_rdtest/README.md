@@ -8,7 +8,8 @@ Two matrics are required to process the RdTest: the Matrics.binCov.bed.gz and Ma
 
 * `Matrics.binCov.bed.gz` is a bgziped bed file that contains the bincov coverages accross whole genome of all individuals involved in the SV discovery project. This file should be tabix indexed. The first three columns describes the gennomic location and following columns describes the bincov coverage of each individual, e.g. 
 
-|#chr | start | end | CMC-HBCC-ACC-DNA-4235 | CMC-HBCC-ACC-DNA-4245 | CMC-HBCC-ACC-DNA-4265 | CMC-HBCC-ACC-DNA-5591 | CMC-HBCC-ACC-DNA-5757 | CMC-HBCC-ACC-DNA-5785 | CMC-HBCC-DNA-ACC-4021 | CMC-HBCC-DNA-ACC-4023 | CMC-HBCC-DNA-ACC-4025 | CMC-HBC | C-DNA-ACC-4027|
+|#chr | start | end | CMC-HBCC-ACC-DNA-4235 | CMC-HBCC-ACC-DNA-4245 | CMC-HBCC-ACC-DNA-4265 | CMC-HBCC-ACC-DNA-5591 | CMC-HBCC-ACC-DNA-5757 | CMC-HBCC-ACC-DNA-5785 | CMC-HBCC-DNA-ACC-4021 | CMC-HBCC-DNA-ACC-4023 | CMC-HBCC-DNA-ACC-4025 | CMC-HBCC-DNA-ACC-4027|
+|-----|-------|-----|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|-----------------------|----------------------|
 |1 | 10000 | 10100 | 938 | 1387 | 954 | 1344 | 688 | 1219 | 1662 | 2027 | 1221 | 1233|
 |1 | 10100 | 10200 | 1089 | 1462 | 927 | 1365 | 840 | 1290 | 1774 | 2217 | 1316 | 1379|
 |1 | 10200 | 10300 | 554 | 694 | 462 | 679 | 516 | 692 | 914 | 1140 | 787 | 637|
