@@ -1,13 +1,59 @@
 # RdTest
 
-This workflow evaluates read-depth support for all CNV calls on a per-batch
-basis.
+This repository contains the workflow that evaluates read-depth support for all CNV calls on a per-batch basis.
+
+## required matrics
+
+Two matrics are required to process the RdTest: the Matrics.binCov.bed.gz and Matrics.binCov.median
+
+* `Matrics.binCov.bed.gz` is a bgziped bed file that contains the bincov coverages accross whole genome of all individuals involved in the SV discovery project. This file should be tabix indexed. The first three columns describes the gennomic location and following columns describes the bincov coverage of each individual, e.g. 
+
+|#chr | start | end | CMC-HBCC-ACC-DNA-4235 | CMC-HBCC-ACC-DNA-4245 | CMC-HBCC-ACC-DNA-4265 | CMC-HBCC-ACC-DNA-5591 | CMC-HBCC-ACC-DNA-5757 | CMC-HBCC-ACC-DNA-5785 | CMC-HBCC-DNA-ACC-4021 | CMC-HBCC-DNA-ACC-4023 | CMC-HBCC-DNA-ACC-4025 | CMC-HBC | C-DNA-ACC-4027|
+|1 | 10000 | 10100 | 938 | 1387 | 954 | 1344 | 688 | 1219 | 1662 | 2027 | 1221 | 1233|
+|1 | 10100 | 10200 | 1089 | 1462 | 927 | 1365 | 840 | 1290 | 1774 | 2217 | 1316 | 1379|
+|1 | 10200 | 10300 | 554 | 694 | 462 | 679 | 516 | 692 | 914 | 1140 | 787 | 637|
+|1 | 10300 | 10400 | 1149 | 1473 | 1019 | 1458 | 945 | 1391 | 1977 | 2231 | 1433 | 1330|
+|1 | 10400 | 10500 | 767 | 964 | 649 | 880 | 583 | 891 | 1336 | 1507 | 797 | 849|
+|1 | 10500 | 10600 | 43 | 102 | 81 | 38 | 59 | 49 | 157 | 145 | 56 | 41|
+|1 | 10600 | 10700 | 16 | 40 | 32 | 21 | 23 | 18 | 62 | 43 | 24 | 15|
+|1 | 10700 | 10800 | 0 | 1 | 1 | 1 | 0 | 0 | 4 | 3 | 1 | 0|
+|1 | 10800 | 10900 | 4 | 0 | 3 | 21 | 0 | 27 | 15 | 20 | 2 | 21|
+|1 | 10900 | 11000 | 14 | 0 | 5 | 41 | 5 | 63 | 36 | 45 | 6 | 40|
+|1 | 11000 | 11100 | 24 | 0 | 10 | 69 | 8 | 105 | 51 | 74 | 9 | 62|
+
+
+*`Matrics.binCov.median`  contains the median of bincov coverages for each individual, e.g.
+
+|CMC-HBCC-ACC-DNA-4235 | CMC-HBCC-ACC-DNA-4245 | CMC-HBCC-ACC-DNA-4265 | CMC-HBCC-ACC-DNA-5591 | CMC-HBCC-ACC-DNA-5757 | CMC-HBCC-ACC-DNA-5785 | CMC-HBCC-DNA-ACC-4021 | CMC-HBCC-DNA-ACC-4023 | CMC-HBCC-DNA-ACC-4025 | CMC-HBCC-DNA-ACC-4027 | CMC-HBCC-DNA-ACC-4029 | CMC-HBCC-DNA-ACC-4031 | CMC-HBCC-DNA-ACC-4033 |
+|61 | 67 | 62 | 63 | 61 | 66 | 63 | 61 | 75 | 69 | 76 | 64 | 68 |
+
 
 ## Input files
 
-* `input_beds/{batch}.{source}.{chrom}.bed`
-    CNV calls in RdTest format.  
-    `#chrom	start	end	name	samples	svtype`
+input files for RdTest are produced through the *01_algorithm_integration* step, and are usually kept under: 
+```
+../../01_algorithm_integration/rdtest_beds/
+```
+
+names of input files are in this format: `{batch}.{source}.{chrom}.bed`, with the following example representing the actual information inside:
+```
+#chrom	start	end	name	samples	svtype
+2	1	10268	CMC_depth_DEL_2_0	CMC-HBCC-ACC-DNA-4235
+2	10000	18000	CMC_depth_DUP_2_1	CMC-HBCC-DNA-ACC-4082	DUP
+2	10000	41072	CMC_depth_DUP_2_2	CMC-HBCC-ACC-DNA-5785,CMC-HBCC-DNA-ACC-4021,CMC-HBCC-DNA-ACC-4
+023,CMC-HBCC-DNA-ACC-4029,CMC-HBCC-DNA-ACC-4031,CMC-HBCC-DNA-ACC-4044,CMC-HBCC-DNA-ACC-4046,CMC-HBCC-DNA-ACC-4
+048,CMC-HBCC-DNA-ACC-4051
+```
+
+##Modify config.yaml
+
+
+##Run through snakemake
+Just type `snakemake` under this directory and the RdTest workflow with be autonamously processed.
+
+##Run each script manually
+
+
 
 ## Output files (in progress)
 
