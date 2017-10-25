@@ -44,7 +44,6 @@ Autosomes and allosomes should be processed separately, with two whitelists cont
 For autosomes:
 ```
 svtools pe-test ../../01_algorithm_integration/vcfcluster/{batch}.{source}.{chrom}.vcf.gz matircs.pe.sorted.txt.gz petest/{batch}.{source}.{chrom}.stats
-
 ```
 For allosomes:
 ```
