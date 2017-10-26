@@ -1,7 +1,7 @@
-#SV detection pipeline
+# SV detection pipeline
 This repository contains the full script developed by Talkowski Lab to detect structural variants.
 
-##Installation and Usage
+## Installation and Usage
 As a snakemake workflow, the pipeline is intended to be cloned for each project, e.g.
 ```
 git clone https://github.com/talkowski-lab/SV-Adjudicator.git MySVDiscoveryProject
