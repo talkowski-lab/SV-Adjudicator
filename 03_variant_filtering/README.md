@@ -8,12 +8,12 @@ This workflow integrate, filters and genotypes the structural variation(SVs) cal
 ### Module configuration
 ### Input
 VCFs and BEDs integrated from `01_algorithm_integration` and evidences (i.e. rd, pe, sr and baf) matrices produced from `02_evidence_assessment` are required for this workflow:
-* rdtest: "../02_evidence_assessment/02a_rdtest/rdtest"
-* petest: "../02_evidence_assessment/02b_petest/petest"
-* srtest: "../02_evidence_assessment/02c_srtest/srtest"
-* baftest: "../02_evidence_assessment/02d_baftest/baftest"
-* input_vcfs: "../01_algorithm_integration/vcfcluster"
-* input_beds: "../01_algorithm_integration/rdtest_beds"
+* rdtest: ../02_evidence_assessment/02a_rdtest/rdtest
+* petest: ../02_evidence_assessment/02b_petest/petest
+* srtest: ../02_evidence_assessment/02c_srtest/srtest
+* baftest: ../02_evidence_assessment/02d_baftest/baftest
+* input_vcfs: ../01_algorithm_integration/vcfcluster
+* input_beds: ../01_algorithm_integration/rdtest_beds
 
 ## Manual process
 #### Evidence aggragation
