@@ -11,6 +11,11 @@ python scripts/split_rdtest_random.py ../../01_algorithm_integration/rdtest_beds
 Output from this step are `{batch}.{source}.{chrom}.XXX`, where XXX are numbers differentiating each sub-file.
 
 2. Run RdTest. In this step, samples should be split by sex to have chromosome X and Y processed. 
+Check and install R packages required for rdtest:
+```
+Rscript scripts/Rpackage_check.R
+``` 
+
 For **autosomes**:
 
 ```
