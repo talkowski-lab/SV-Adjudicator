@@ -203,7 +203,7 @@ loadData <- function(chr, start, end, cnvID, sampleIDs,coveragefile,medianfile,b
       ##Use sapply to convert files to numeric only more than one column in cov1 matrix. If not matrix will already be numeric##  
       if (nrow(cov1) > 1) {
         cov1 <- data.frame(sapply(cov1, as.numeric), check.names = FALSE)
-      }
+      } else {cov1<-data.frame(t(sapply(cov1,as.numeric)),check.names=FALSE)}
     }
     
     
