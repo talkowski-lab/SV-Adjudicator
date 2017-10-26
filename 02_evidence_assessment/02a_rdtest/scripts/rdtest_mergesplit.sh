@@ -15,31 +15,31 @@ done
 
 if [ "$chrom" = "X" ]; then
     cat $inputfolder/$batch.$source.X.*.females.metrics \
-          | sed -r -e '/^chr\\s/d' \
+          | sed -r -e '/^chr/d' \
           | sort -k1,1V -k2,2n \
           | cat <(head -n1 $input) - \
           > $inputfolder/$batch.$source.X.females.metrics
     cat $inputfolder/$batch.$source.X.*.males.metrics \
-          | sed -r -e '/^chr\\s/d' \
+          | sed -r -e '/^chr/d' \
           | sort -k1,1V -k2,2n \
           | cat <(head -n1 $input) - \
           > $inputfolder/$batch.$source.X.males.metrics
     python scripts/rd_merge_allosome.py $batch $source X $inputfolder $outputfolder
 elif [ "$chrom" = "Y" ]; then
     cat $inputfolder/$batch.$source.Y.*.females.metrics \
-          | sed -r -e '/^chr\\s/d' \
+          | sed -r -e '/^chr/d' \
           | sort -k1,1V -k2,2n \
           | cat <(head -n1 $input) - \
           > $inputfolder/$batch.$source.Y.females.metrics
     cat $inputfolder/$batch.$source.Y.*.males.metrics \
-          | sed -r -e '/^chr\\s/d' \
+          | sed -r -e '/^chr/d' \
           | sort -k1,1V -k2,2n \
           | cat <(head -n1 $input) - \
           > $inputfolder/$batch.$source.Y.males.metrics
     python scripts/rd_merge_allosome.py $batch $source Y $inputfolder $outputfolder
 else
     cat $inputfolder/$batch.$source.$chrom.*.metrics \
-          | sed -r -e '/^chr\\s/d' \
+          | sed -r -e '/^chr/d' \
           | sort -k1,1V -k2,2n \
           | cat <(head -n1 $input) - \
           > $outputfolder/$batch.$source.$chrom.metrics
