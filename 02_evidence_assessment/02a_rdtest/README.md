@@ -31,7 +31,7 @@ Rscript ./scripts/RdTest.R -b split_beds/{batch}.{source}.{chrom}.XXX -o split_r
 
 3. Concatinate the sub metrics:
 ```
-bash scripts/rdtest_mergesplit.sh batch source chrom
+bash scripts/rdtest_mergesplit.sh {batch} {source} {chrom}
 ```
 
 
