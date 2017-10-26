@@ -15,6 +15,9 @@ VCFs and BEDs integrated from `01_algorithm_integration` and evidences (i.e. rd,
 * input_vcfs: ../01_algorithm_integration/vcfcluster
 * input_beds: ../01_algorithm_integration/rdtest_beds
 
+A batch_list including names of all samples in the same batch should be prepared for read depth calls to be properly aggregated
+* batch_list
+
 ## Manual process
 #### Evidence aggragation
 a. To aggregate evidence for **pesr callers** (eg. delly, lumpy, manta, wham), for each `{source}` and `{chrom}`: 
@@ -43,5 +46,6 @@ c. To aggregate evidence for **mobile element insertion callers** (eg. MELT), fo
 python scripts/aggregate.py \
 	-s ../02_evidence_assessment/02c_srtest/srtest/{batch}.{source}.{chrom}.stats \
 	-v ../01_algorithm_integration/vcfcluster/{batch}.{source}.{chrom}.vcf.gz \
+	--batch-list batch_list
 	metrics/{batch}.{source}.{chrom}.metrics
 ```
