@@ -10,6 +10,30 @@ generalizable to all use cases. However, it is presented here for a)
 reproducibility of the SSC analyses and b) as an example of how SV calls may be
 standardized to the format required by the remaining steps of the pipeline.
 
+##Module configuration and input
+The configuration file `config.yaml` outlines the module's inputs and parameters, and should be modified accordingly to each specific project. 
+
+* batches : filepath
+Sample/group/batch key.
+
+* groups : filepath
+List of groups to include during integration. Expects one PE/SR VCF per group.
+
+* pesr_sources: 
+Names of pair end/split read algorithms to be processed
+
+* depth_sources:
+Names of read depth algorithms to be processed
+
+* svtypes:
+Types of SVs to be processed
+
+* cnv_types:
+Types of CNVs to be processed
+
+* outlier_removal:
+Sources to remove outliers from 
+
 ## Input data
 
 ### PE/SR calls
