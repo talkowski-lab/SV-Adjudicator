@@ -1,4 +1,40 @@
-# 03. Genotyping
+# 03 Variant Filtering
+This workflow integrate, filters and genotypes the structural variation(SVs) calls based on the evidence derived in previous modules. The following processes are applied here:
+1. Evidences collected from module 02, i.e., rd, pe, sr and baf, are aggregated;
+2. Process integrated evidences through Random Forest(RF) to train the optimized parameter for quality control
+3. Apply the RF filters on the SVs and remove those failures.
 
-This workflow filters and genotypes the integrated structural variation calls
-based on the evidence derived in module 02.
+## Process through snakemake
+### Module configuration
+### Input
+
+## Manual process
+#### Evidence aggragation
+a. To aggregate evidence for **pesr callers** (eg. delly, lumpy, manta, wham), for each `{source}` and `{chrom}`: 
+```
+python scripts/aggregate.py \
+	-r ../02_evidence_assessment/02a_rdtest/rdtest/{batch}.{source}.{chrom}.metrics \
+	-p ../02_evidence_assessment/02b_petest/petest/{batch}.{source}.{chrom}.stats \
+	-s ../02_evidence_assessment/02c_srtest/srtest/{batch}.{source}.{chrom}.stats \
+	-b ../02_evidence_assessment/02d_baftest/baftest/{batch}.{source}.{chrom}.stats \
+	-v ../01_algorithm_integration/vcfcluster/{batch}.{source}.{chrom}.vcf.gz \
+	metrics/{batch}.{source}.{chrom}.metrics
+```
+
+b. To aggregate evidence for **read depth callers** (eg. cn.mops, CNVnator, ERDs), for `{source}` and `{chrom}`: 
+```
+python scripts/aggregate.py \
+	-r ../02_evidence_assessment/02a_rdtest/rdtest/{batch}.{source}.{chrom}.metrics \
+	-b ../02_evidence_assessment/02d_baftest/baftest/{batch}.{source}.{chrom}.stats \
+	-v ../01_algorithm_integration/rdtest_beds/{batch}.{source}.{chrom}.bed \
+	--bed \
+	metrics/{batch}.{source}.{chrom}.metrics
+```
+
+c. To aggregate evidence for **mobile element insertion callers** (eg. MELT), for `{source}` and `{chrom}`: 
+```
+python scripts/aggregate.py \
+	-s ../02_evidence_assessment/02c_srtest/srtest/{batch}.{source}.{chrom}.stats \
+	-v ../01_algorithm_integration/vcfcluster/{batch}.{source}.{chrom}.vcf.gz \
+	metrics/{batch}.{source}.{chrom}.metrics
+```
