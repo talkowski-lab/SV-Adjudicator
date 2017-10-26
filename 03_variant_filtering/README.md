@@ -49,3 +49,8 @@ python scripts/aggregate.py \
 	--batch-list batch_list
 	metrics/{batch}.{source}.{chrom}.metrics
 ```
+
+Modify the aggragated metrics with position of each variants
+```
+python scripts/add_pos.py -v ../01_algorithm_integration/vcfcluster/{batch}.{source}.{chrom}.vcf.gz metrics/{batch}.{source}.{chrom}.metrics
+python scripts/add_pos.py -v ../01_algorithm_integration/rdtest_beds/{batch}.{source}.{chrom}.bed metrics/{batch}.{source}.{chrom}.metrics
