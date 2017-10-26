@@ -40,9 +40,9 @@ input files for RdTest are produced through the *01_algorithm_integration* step,
 names of input files are in this format: `{batch}.{source}.{chrom}.bed`, with the following example representing the actual information inside:
 ```
 #chrom	start	end	name	samples	svtype
-2	1	10268	CMC_depth_DEL_2_0	CMC-HBCC-ACC-DNA-4235
-2	10000	18000	CMC_depth_DUP_2_1	CMC-HBCC-DNA-ACC-4082	DUP
-2	10000	41072	CMC_depth_DUP_2_2	CMC-HBCC-ACC-DNA-5785,CMC-HBCC-DNA-ACC-4021,CMC-HBCC-DNA-ACC-4023,CMC-HBCC-DNA-ACC-4029,CMC-HBCC-DNA-ACC-4031,CMC-HBCC-DNA-ACC-4044,CMC-HBCC-DNA-ACC-4046,CMC-HBCC-DNA-ACC-4048,CMC-HBCC-DNA-ACC-4051
+2	1	10268	CMC_depth_DEL_2_0	sample2   DEL
+2	10000	18000	CMC_depth_DUP_2_1	sample8,sample10   DUP
+2	10000	41072	CMC_depth_DUP_2_2	sample1,sample2,sample4,sample6,sample7,sample8,sample10
 ```
 
 ## Modify config.yaml
