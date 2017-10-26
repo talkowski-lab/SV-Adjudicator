@@ -1,7 +1,7 @@
-## Run through snakemake
+## Process through snakemake
 Just type `snakemake` under this directory and the RdTest workflow with be autonamously processed.
 
-## Run each script manually
+## Process each step manually
 It is also possible to run each step in this module manually, by following these steps:
 
 1. Randomly split the big bed file into small beds for faster processing:
