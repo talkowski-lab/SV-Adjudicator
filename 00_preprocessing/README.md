@@ -10,7 +10,7 @@ generalizable to all use cases. However, it is presented here for a)
 reproducibility of the SSC analyses and b) as an example of how SV calls may be
 standardized to the format required by the remaining steps of the pipeline.
 
-##Module configuration and input
+## Module configuration and input
 The configuration file `config.yaml` outlines the module's inputs and parameters, and should be modified accordingly to each specific project. 
 
 * batches : filepath
