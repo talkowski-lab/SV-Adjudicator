@@ -4,30 +4,30 @@ Just type `snakemake` under this directory and the RdTest workflow with be auton
 ## Module configuration and input
 The configuration file `config.yaml` outlines the module's inputs and parameters, and should be modified accordingly to each specific project. 
 
-* batches : filepath
+* `batches` : filepath
 Sample/group/batch key.
 
-* input_vcfs : vcf files to be processed in this step. 
+* `input_vcfs` : vcf files to be processed in this step. 
 The vcf files are produced through `01_algorithm_integration` and are kept under `../../01_algorithm_integration/vcfcluster`
 
-* input_beds : vcf files to be processed in this step. 
+* `input_beds` : vcf files to be processed in this step. 
 The bed files are produced through `01_algorithm_integration` and are kept under `../../01_algorithm_integration/rdtest_beds`
 
-* groups: list of samples to be processed.
+* `groups` : list of samples to be processed.
 
-* chromos: list of chromosomes to be processed.
+* `chromos` : list of chromosomes to be processed.
 This file should be modified according to different reference genome. It is recommended that autosomes and allosomes are prepared differently.
 
-* pesr_sources: 
+* `pesr_sources` : 
 Names of pair end/split read algorithms to be processed
 
-* depth_sources:
+* `depth_sources` :
 Names of read depth algorithms to be processed
 
-* rdtest: script to process RdTest
+* `rdtest`: script to process RdTest
 This manuscript is kept at: scripts/RdTest.R
 
-* coveragefile: the matrices describing the coverage of each bin accross genome in each sample
+* `coveragefile` : the matrices describing the coverage of each bin accross genome in each sample
 To prepare this matrices: 
 1. Apply `bincov` on each individual, either with or without genomic blacklist
 2. Concatinate bincov calls of all individuals to form `{batch}.binCov.bed` 
@@ -45,9 +45,9 @@ The bed file look like:
 1 10700 10800 0 1 1 1
 1 10800 10900 4 0 3 21
 ```
-* medianfile: the metrics describing the medeian read coverage of each sample accross whole genome
+* `medianfile` : the metrics describing the medeian read coverage of each sample accross whole genome
 
-* famfile: ../../ref/{batch}.fam
+* `famfile` : ../../ref/{batch}.fam
 This file describes the family structure in batch
 
 * rdtest_split_size: 100 by default
