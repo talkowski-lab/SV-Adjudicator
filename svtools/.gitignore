@@ -1,9 +1,0 @@
-__pycache__/
-.*.swp
-*.egg-info/
-.panfs*
-*.c
-*.so
-
-build/
-test/
