@@ -13,38 +13,38 @@ standardized to the format required by the remaining steps of the pipeline.
 ## Module configuration and input
 The configuration file `config.yaml` outlines the module's inputs and parameters, and should be modified accordingly to each specific project. 
 
-* batches : filepath
+* `batches` : filepath
 Sample/group/batch key.
 
-* groups : filepath
+* `groups` : filepath
 List of groups to include during integration. Expects one PE/SR VCF per group.
 
-* pesr_sources: 
+* `pesr_sources` : 
 Names of pair end/split read algorithms to be processed
 
-* depth_sources:
+* `depth_sources` :
 Names of read depth algorithms to be processed
 
-* svtypes:
+* `svtypes` :
 Types of SVs to be processed
 
-* cnv_types:
+* `cnv_types` :
 Types of CNVs to be processed
 
-* outlier_removal:
+* `outlier_removal` :
 Sources to remove outliers from 
 
 ## Input data
 
 ### PE/SR calls
 PE/SR calls should be placed in the `data/raw_vcfs/` directory and follow the
-filename convention `{source}.{group}.vcf.gz`, where `source` refers to the
+filename convention `{source}/{source}.{group}.vcf.gz`, where `source` refers to the
 source algorithm which generated the calls and `group` refers to an identifier
-of the group of samples on which the algorithm was run. In the SSC analyses,
-each algorithm was run on a per-quad basis.
+of the group of samples on which the algorithm was run. 
 
 ### Read depth calls
-To be completed.
+RD calls across all samples should be concatinated together, and placed in tbe `data/raw_beds/` directory and follow the
+filename convention `{source}/{sample}.{svtype}.raw.bed`. `svtype` can be either DEL or DUP.
 
 ## Output data
 
