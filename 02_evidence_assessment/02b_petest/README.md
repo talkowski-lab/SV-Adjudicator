@@ -33,7 +33,7 @@ tabix -b 2 -e 2 matircs.pe.sorted.txt.gz
 Input files for PeTest are produced through the 01_algorithm_integration step, and are usually kept under `../../01_algorithm_integration/vcfcluster/`. Names of input files are in this format: `{batch}.{source}.{chrom}.vcf.gz`
 
 ## Process through snakemake
-You can simply modify the `config.yaml` file to fit your data, and type `snakemake` under this directory to get the RdTest workflow autonamously processed.
+You can simply modify the `config.yaml` file to fit your data, and type `snakemake` under this directory to get the RdTest workflow autonamously processed. Details as how to modify the `config.yaml` is described in **Module configuration and input**.
 
 ## Module configuration and input
 The configuration file `config.yaml` outlines the module's inputs and parameters, and should be modified accordingly to each specific project. 
@@ -59,7 +59,7 @@ Names of pair end/split read algorithms to be processed
 Names of read depth algorithms to be processed
 
 * `pe_counts` : pe_counts/{batch}.pe.sorted.txt.gz
-This matrices contains all disconcordant pair end information are kept. To prepare this matrics, ee `**Required matrics**` for instructions.
+This matrices contains all disconcordant pair end information are kept. To prepare this matrics, refer to **Required matrics** for instructions.
 
 * `famfile` : ../../ref/{batch}.fam
 This file describes the family structure in batch
