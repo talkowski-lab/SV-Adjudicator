@@ -2,7 +2,7 @@
 This repository contains the workflow that evaluates read coverage all CNV calls on a per-batch basis.
 
 ## Required matrics
-Rd matrics (`Matrics.binCov.bed.gz` and `Matrics.binCov.median`) should be prepared for this process.  `Matrics.binCov.bed.gz` describes the coverage of each bin accross genome in each sample, and `Matrics.binCov.median` contians the median bincov coverage for each individual across whole genome.
+Rd matrics (`{batch}.binCov.bed.gz` and `{batch}.binCov.median`) should be prepared for this process.  `{batch}.binCov.bed.gz` describes the coverage of each bin accross genome in each sample, and `{batch}.binCov.median` contians the median bincov coverage for each individual across whole genome.
 
 To prepare this matrices:
 1. Apply bincov on each individual, either with or without genomic blacklist
@@ -53,8 +53,10 @@ Names of read depth algorithms to be processed
 This manuscript is kept at: scripts/RdTest.R
 
 * `coveragefile` : the matrices describing the coverage of each bin accross genome in each sample
+`{batch}.binCov.bed.gz`
 
 * `medianfile` : the metrics describing the medeian read coverage of each sample accross whole genome
+`{batch}.binCov.median`
 
 * `famfile` : ../../ref/{batch}.fam
 This file describes the family structure in batch
@@ -81,13 +83,13 @@ Rscript scripts/Rpackage_check.R
 For **autosomes**:
 
 ```
-Rscript scripts/RdTest.R -b split_beds/{batch}.{source}.{chrom}.XXX -o split_rdtest/ -n {batch}.{source}.{chrom}.XXX -c Matrics.binCov.bed.gz -m Matrics.binCov.median -f full_sample_list.fam
+Rscript scripts/RdTest.R -b split_beds/{batch}.{source}.{chrom}.XXX -o split_rdtest/ -n {batch}.{source}.{chrom}.XXX -c {batch}.binCov.bed.gz -m {batch}.binCov.median -f full_sample_list.fam
 ```
 
 For **allosomes**, a female whitelist containing full list of all females samples and a male list with names of all males samples should be prepared:
 ```
-Rscript ./scripts/RdTest.R -b split_beds/{batch}.{source}.{chrom}.XXX -o split_rdtest/ -n {batch}.{source}.{chrom}.XXX.females -w female.whitelist  -c Matrics.binCov.bed.gz -m Matrics.binCov.median -f full_sample_list.fam
-Rscript ./scripts/RdTest.R -b split_beds/{batch}.{source}.{chrom}.XXX -o split_rdtest/ -n {batch}.{source}.{chrom}.XXX.males -w male.whitelist  -c Matrics.binCov.bed.gz -m Matrics.binCov.median -f full_sample_list.fam
+Rscript ./scripts/RdTest.R -b split_beds/{batch}.{source}.{chrom}.XXX -o split_rdtest/ -n {batch}.{source}.{chrom}.XXX.females -w female.whitelist  -c {batch}.binCov.bed.gz -m {batch}.binCov.median -f full_sample_list.fam
+Rscript ./scripts/RdTest.R -b split_beds/{batch}.{source}.{chrom}.XXX -o split_rdtest/ -n {batch}.{source}.{chrom}.XXX.males -w male.whitelist  -c {batch}.binCov.bed.gz -m {batch}.binCov.median -f full_sample_list.fam
 ```
 
 3. Concatinate the sub metrics:
