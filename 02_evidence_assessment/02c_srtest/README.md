@@ -62,7 +62,7 @@ Names of pair end/split read algorithms to be processed
 Names of read depth algorithms to be processed
 
 *`sr_counts` : pe_counts/{batch}.sr.sorted.txt.gz
-This matrices contains all split read information. To prepare this matrics, ee `**Required matrics**` for instructions.
+This matrices contains all split read information. To prepare this matrics, refer to **Required matrics** for instructions.
 
 * `famfile` : ../../ref/{batch}.fam
 This file describes the family structure in batch
