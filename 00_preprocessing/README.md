@@ -112,4 +112,28 @@ python scripts/remove_outliers.py std_vcfs/{source}.{group}.vcf outliers/{source
 vcf-sort -c filtered_vcfs/{source}.{group}.vcf | bgzip -c > filtered_vcfs/{source}.{group}.vcf.gz
 tabix -p filtered_vcfs/{source}.{group}.vcf.gz
 ```
+### RD
+RD preprocess includes:
+1. standardize vcf files from individual algorithm:
+cnmops:
+```
+zcat data/raw_beds/cnmops/{sample}.{svtype}.raw.bed \
+	| fgrep {sample} \
+	| fgrep {svtype} \
+	| awk -v OFS="\\t" '($1!="X" && $1!="Y") {{print $1, $2, $3, $3-$2, "1", "0", "0"}}' \
+	| cat - <(sed -e '/^#/d' {input.allosomal} | awk -v OFS="\\t" '{{print $1, $2, $3, $3-$2, 1, 0, 0}}') \
+	> std_beds/cnmops/{sample}.{svtype}.raw.bed
+```
+cnvnator
+```
+awk -v OFS="\\t" '{{print $1, $2+50, $5+50, $8, "0", "1", "0"}}'  data/raw_beds/cnvnator/{sample}.{svtype}.win100.bp200.sort.bedpe > std_beds/cnvnator/{sample}.{svtype}.raw.bed
+```
+genomestrip
+```
+awk -v OFS="\\t" '{{print $1, $2, $3, $4-$3, "0", "0", "1"}}' data/raw_beds/genomestrip/{sample}.genomestrip.{svtype}.bed > std_beds/genomestrip/{sample}.{svtype}.raw.bed
+```
+2. concatinate standardized beds from each algorithm:
+```
+cat std_beds/cnmops/{sample}.{svtype}.raw.bed std_beds/cnvnator/{sample}.{svtype}.raw.bed std_beds/genomestrip/{sample}.{svtype}.raw.bed | sort -k1,1V -k2,2n > std_beds/merged_algs/{sample}.{svtype}.raw.bed
+```
 
