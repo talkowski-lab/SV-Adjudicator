@@ -5,7 +5,33 @@ This workflow integrate, filters and genotypes the structural variation(SVs) cal
 3. Apply the RF filters on the SVs and remove those failures.
 
 ## Process through snakemake
+
 ### Module configuration
+The configuration file `config.yaml` outlines the module's inputs and parameters, and should be modified accordingly to each specific project. 
+
+* `batches` : Sample/group/batch key.
+
+* `samples` : list of individules to be included
+
+* `groups` : list of samples to be processed.
+
+* `chromos` : list of chromosomes to be processed.
+This file should be modified according to different reference genome. It is recommended that autosomes and allosomes are prepared differently.
+
+* `pesr_sources` : 	Names of pair end/split read algorithms to be processed
+
+* `depth_sources` :	Names of read depth algorithms to be processed
+
+* `pe_counts` : pe_counts/{batch}.pe.sorted.txt.gz 
+
+* `sr_counts` : sr_counts/{batch}.sr.sorted.txt.gz
+
+* `coveragefile`: {batch}.binCov.bed.gz 
+
+* `medianfile` : {batch}.binCov.median
+
+* `famfile` : ../../ref/{batch}.fam
+
 ### Input
 VCFs and BEDs integrated from `01_algorithm_integration` and evidences (i.e. rd, pe, sr and baf) matrices produced from `02_evidence_assessment` are required for this workflow:
 * rdtest: ../02_evidence_assessment/02a_rdtest/rdtest
