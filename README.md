@@ -13,7 +13,7 @@ cd MySVDiscoveryProject
 conda env create -f environment.yaml
 source activate sv_pipeline
 ```
-
+## Module configuration and input
 After cloning the pipeline, edit `config.yaml` to update the configuration as
 necessary for the project, then link or copy raw data into the `data/` or
 `ref/` directories. (More detail below or to come. For current testing
@@ -36,6 +36,13 @@ configuration or data files.
 
 ```
 $ snakemake clean
+```
+
+## Install svtools
+`svtools` is required for the process of `SV-Adjudicator` and is included in this repository. To install `svtools`,
+```
+cd svtools
+python setup.py install --user
 ```
 
 ## Explicit Dependencies
