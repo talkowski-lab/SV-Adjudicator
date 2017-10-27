@@ -1,6 +1,58 @@
 ## Process through snakemake
 Just type `snakemake` under this directory and the RdTest workflow with be autonamously processed.
 
+## Module configuration and input
+The configuration file `config.yaml` outlines the module's inputs and parameters, and should be modified accordingly to each specific project. 
+
+* batches : filepath
+Sample/group/batch key.
+
+* input_vcfs : vcf files to be processed in this step. 
+The vcf files are produced through `01_algorithm_integration` and are kept under `../../01_algorithm_integration/vcfcluster`
+
+* input_beds : vcf files to be processed in this step. 
+The bed files are produced through `01_algorithm_integration` and are kept under `../../01_algorithm_integration/rdtest_beds`
+
+* groups: list of samples to be processed.
+
+* chromos: list of chromosomes to be processed.
+This file should be modified according to different reference genome. It is recommended that autosomes and allosomes are prepared differently.
+
+* pesr_sources: 
+Names of pair end/split read algorithms to be processed
+
+* depth_sources:
+Names of read depth algorithms to be processed
+
+* rdtest: script to process RdTest
+This manuscript is kept at: scripts/RdTest.R
+
+* coveragefile: the matrices describing the coverage of each bin accross genome in each sample
+To prepare this matrices: 
+1. Apply `bincov` on each individual, either with or without genomic blacklist
+2. Concatinate bincov calls of all individuals to form `{batch}.binCov.bed` 
+3. bgzip and tabix the concatinated file
+The bed file look like: 
+```
+#chr start end sample1 sample2 sample3 sample4
+1 10000 10100 938 1387 954 1344
+1 10100 10200 1089 1462 927 1365
+1 10200 10300 554 694 462 679
+1 10300 10400 1149 1473 1019 1458
+1 10400 10500 767 964 649 880
+1 10500 10600 43 102 81 38
+1 10600 10700 16 40 32 21
+1 10700 10800 0 1 1 1
+1 10800 10900 4 0 3 21
+```
+* medianfile: the metrics describing the medeian read coverage of each sample accross whole genome
+
+* famfile: ../../ref/{batch}.fam
+This file describes the family structure in batch
+
+* rdtest_split_size: 100 by default
+This number specifies the number of CNVs included in each sub-bed that'll be processed by RdTest.R 
+
 ## Process each step manually
 It is also possible to run each step in this module manually, by following these steps:
 
