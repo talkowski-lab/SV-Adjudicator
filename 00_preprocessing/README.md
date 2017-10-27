@@ -94,3 +94,22 @@ contributed to each merged call.
         coverage. 
     * `{batch}.{svtype}.bed.gz`  
         Concatenation of standardized `*.cov.bed` from all samples in a batch.
+
+## Manual process
+### PE/SR
+PE/SR preprocess includes these steps: 
+1. standardize vcf format
+```
+svtools standardize  {source}.{group} data/raw_vcfs/{source}/{source}.{group}.vcf.gz std_vcfs/{source}.{group}.vcf {source}
+```
+2. identify and remove vcf outliers  
+```
+python scripts/find_outliers.py std_vcfs/{source}.{group}.vcf outliers/{source}.list
+python scripts/remove_outliers.py std_vcfs/{source}.{group}.vcf outliers/{source}.list filtered_vcfs/{source}.{group}.vcf
+```
+3. sort and index vcf
+```
+vcf-sort -c filtered_vcfs/{source}.{group}.vcf | bgzip -c > filtered_vcfs/{source}.{group}.vcf.gz
+tabix -p filtered_vcfs/{source}.{group}.vcf.gz
+```
+
