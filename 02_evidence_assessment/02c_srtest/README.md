@@ -38,9 +38,34 @@ Input files for PeTest are produced through the 01_algorithm_integration step, a
 ## Process through snakemake
 You can simply modify the `config.yaml` file to fit your data, and type `snakemake` under this directory to get the RdTest workflow autonamously processed.
 
-### Modify config.yaml
+## Module configuration and input
+The configuration file `config.yaml` outlines the module's inputs and parameters, and should be modified accordingly to each specific project. 
 
+* `batches` : filepath
+Sample/group/batch key.
 
+* `input_vcfs` : vcf files to be processed in this step. 
+The vcf files are produced through `01_algorithm_integration` and are kept under `../../01_algorithm_integration/vcfcluster`
+
+* `input_beds` : vcf files to be processed in this step. 
+The bed files are produced through `01_algorithm_integration` and are kept under `../../01_algorithm_integration/rdtest_beds`
+
+* `groups` : list of samples to be processed.
+
+* `chromos` : list of chromosomes to be processed.
+This file should be modified according to different reference genome. It is recommended that autosomes and allosomes are prepared differently.
+
+* `pesr_sources` : 
+Names of pair end/split read algorithms to be processed
+
+* `depth_sources` :
+Names of read depth algorithms to be processed
+
+*`sr_counts` : pe_counts/{batch}.sr.sorted.txt.gz
+This matrices contains all split read information. To prepare this matrics, ee `**Required matrics**` for instructions.
+
+* `famfile` : ../../ref/{batch}.fam
+This file describes the family structure in batch
 
 ## Process each script manually
 Autosomes and allosomes should be processed separately, with two whitelists contaning samples names of all males (whitelists/{batch}.males.list) and females(whitelists/{batch}.females.list) prepared. The whitelists have one sample name in each line.
