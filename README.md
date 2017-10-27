@@ -44,6 +44,7 @@ $ snakemake clean
 cd svtools
 python setup.py install --user
 ```
+For more details about `svtools`, refer to the subfolder.
 
 ## Explicit Dependencies
 
