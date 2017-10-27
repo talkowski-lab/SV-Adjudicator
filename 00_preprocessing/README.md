@@ -10,7 +10,8 @@ generalizable to all use cases. However, it is presented here for a)
 reproducibility of the SSC analyses and b) as an example of how SV calls may be
 standardized to the format required by the remaining steps of the pipeline.
 
-## Module configuration and input
+## Process through snakemake
+### Module configuration and input
 The configuration file `config.yaml` outlines the module's inputs and parameters, and should be modified accordingly to each specific project. 
 
 * `batches` : filepath
@@ -34,21 +35,21 @@ Types of CNVs to be processed
 * `outlier_removal` :
 Sources to remove outliers from 
 
-## Input data
+### Input data
 
-### PE/SR calls
+#### PE/SR calls
 PE/SR calls should be placed in the `data/raw_vcfs/` directory and follow the
 filename convention `{source}/{source}.{group}.vcf.gz`, where `source` refers to the
 source algorithm which generated the calls and `group` refers to an identifier
 of the group of samples on which the algorithm was run. 
 
-### Read depth calls
+#### RD calls
 RD calls across all samples should be concatinated together, and placed in tbe `data/raw_beds/` directory and follow the
 filename convention `{source}/{sample}.{svtype}.raw.bed`. `svtype` can be either DEL or DUP.
 
-## Output data
+### Output data
 
-### PE/SR preprocessing
+#### PE/SR preprocessing
 The PE/SR preprocessing module standardizes VCFs and removes calls specific to
 outlying samples. Outliers are determined to be samples with more than 
 `(Q3 + 1.5 * IQR)` variants observed, and are calculated on a per-algorithm,
@@ -71,8 +72,7 @@ per-svtype basis (e.g. Delly inversions).
     VCFs with calls specific to outlier samples or null in all samples removed.
     Sorted and tabix-indexed to prepare for clustering.
 
-
-### RD preprocessing
+#### RD preprocessing
 The RD preprocessing module merges all calls made by any depth algorithm in a 
 sample to create a single bed per sample, annotated with the algorithms which
 contributed to each merged call.
