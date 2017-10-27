@@ -53,23 +53,7 @@ Names of read depth algorithms to be processed
 This manuscript is kept at: scripts/RdTest.R
 
 * `coveragefile` : the matrices describing the coverage of each bin accross genome in each sample
-To prepare this matrices: 
-1. Apply `bincov` on each individual, either with or without genomic blacklist
-2. Concatinate bincov calls of all individuals to form `{batch}.binCov.bed` 
-3. bgzip and tabix the concatinated file
-The bed file look like: 
-```
-#chr start end sample1 sample2 sample3 sample4
-1 10000 10100 938 1387 954 1344
-1 10100 10200 1089 1462 927 1365
-1 10200 10300 554 694 462 679
-1 10300 10400 1149 1473 1019 1458
-1 10400 10500 767 964 649 880
-1 10500 10600 43 102 81 38
-1 10600 10700 16 40 32 21
-1 10700 10800 0 1 1 1
-1 10800 10900 4 0 3 21
-```
+
 * `medianfile` : the metrics describing the medeian read coverage of each sample accross whole genome
 
 * `famfile` : ../../ref/{batch}.fam
