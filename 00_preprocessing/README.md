@@ -137,3 +137,9 @@ awk -v OFS="\\t" '{{print $1, $2, $3, $4-$3, "0", "0", "1"}}' data/raw_beds/geno
 cat std_beds/cnmops/{sample}.{svtype}.raw.bed std_beds/cnvnator/{sample}.{svtype}.raw.bed std_beds/genomestrip/{sample}.{svtype}.raw.bed | sort -k1,1V -k2,2n > std_beds/merged_algs/{sample}.{svtype}.raw.bed
 ```
 
+## Note:
+* Each SVs in the vcf files should have an unique ID. If any caller label SVs as '.', manual modification is required.
+* Each individual should have genotype information for each SV, '.' or './.' will be both considered as '0/0' and filtered out from the standardized vcf.
+* Each SV should have positive position, 0 is not accepted as a valid position for SVs
+
+
