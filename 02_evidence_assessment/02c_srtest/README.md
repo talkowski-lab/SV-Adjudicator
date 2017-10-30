@@ -67,7 +67,7 @@ This matrices contains all split read information. To prepare this matrics, refe
 * `famfile` : ../../ref/{batch}.fam
 This file describes the family structure in batch
 
-## Process each script manually
+## Manual Process
 Autosomes and allosomes should be processed separately, with two whitelists contaning samples names of all males (whitelists/{batch}.males.list) and females(whitelists/{batch}.females.list) prepared. The whitelists have one sample name in each line.
 For autosomes:
 ```
@@ -79,6 +79,37 @@ svtools sr-test --samples whitelists/{batch}.females.list ../../01_algorithm_int
 svtools sr-test --samples whitelists/{batch}.males.list ../../01_algorithm_integration/vcfcluster/{batch}.{source}.{chrom}.vcf.gz  matircs.sr.sorted.txt.gz srtest_allosomes/{batch}.{source}.{chrom}.males.stats
 python script/sr_merge_allosomes.py batch source chrom X
 python script/sr_merge_allosomes.py batch source chrom Y
+```
+
+## Efficient manual process
+It is recommended that big vcf input be split randomly into smaller files (e.g. 100 SV records per vcf), run through sr-test and then merge the splits together. To split vcf files:
+```
+python script/split_vcf.random.py ../01_algorithm_integration/vcfcluster/{batch}.{source}.{chrom}.vcf.gz split_vcf/{batch}.{source}.{chrom}. -s number_of_svs_per_split
+```
+Sort and index each split vcf (i.e. `split_out`),
+```
+vcf-sort split_out > split_out.vcf
+bgzip split_out.vcf
+tabix split_out.vcf.gz
+```
+For each split vcf, apply `svtools sr-test` and them merge them:
+```
+svtools sr-test split_out.vcf.gz matircs.split.sorted.txt.gz split_srtest/split_out.stats
+cat {input} | sed -r -e '/^chr\\s/d' | sort -k1,1V -k2,2n | cat <(head -n1 {input[0]}) - > {output}
+```
+
+
+Here's full instruction of `script/split_vcf.random.py`:
+```
+usage: split_vcf.random.py [-h] [-s SIZE] input output
+
+positional arguments:
+  input                 namd of input vcf.gz to be splited
+  output                prefix of output
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s SIZE, --size SIZE  size of outputs
 ```
 
 ## Output filesthi sformat:
