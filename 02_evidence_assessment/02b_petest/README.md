@@ -100,7 +100,7 @@ cat {input} | sed -r -e '/^chr\\s/d' | sort -k1,1V -k2,2n | cat <(head -n1 {inpu
 
 Here's full instruction of `script/split_vcf.random.py`:
 ```
-usage: split_pesrtest_random.py [-h] [-s SIZE] input output
+usage: split_vcf.random.py [-h] [-s SIZE] input output
 
 positional arguments:
   input                 namd of input vcf.gz to be splited
