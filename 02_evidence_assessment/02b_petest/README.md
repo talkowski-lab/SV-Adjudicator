@@ -66,7 +66,7 @@ This file describes the family structure in batch
 
 
 
-## Process each script manually
+## Manual process
 Autosomes and allosomes should be processed separately, with two whitelists contaning samples names of all males (whitelists/{batch}.males.list) and females(whitelists/{batch}.females.list) prepared. The whitelists have one sample name in each line. 
 
 For autosomes:
