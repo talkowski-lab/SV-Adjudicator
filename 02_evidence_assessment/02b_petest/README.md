@@ -81,6 +81,36 @@ python script/pe_merge_allosomes.py batch source chrom X
 python script/pe_merge_allosomes.py batch source chrom Y
 ```
 
+## Efficient manual process
+It is recommended that big vcf input be split randomly into smaller files (e.g. 100 SV records per vcf), run through pe-test and then merge the splits together. To split vcf files:
+```
+python script/split_vcf.random.py ../01_algorithm_integration/vcfcluster/{batch}.{source}.{chrom}.vcf.gz split_vcf/{batch}.{source}.{chrom}. -s number_of_svs_per_split
+```
+Sort and index each split vcf (i.e. `split_out`),
+```
+vcf-sort split_out > split_out.vcf
+bgzip split_out.vcf
+tabix split_out.vcf.gz
+```
+For each split vcf, apply `svtools pe-test` and them merge them:
+```
+svtools pe-test split_out.vcf.gz matircs.pe.sorted.txt.gz split_petest/split_out.stats
+cat {input} | sed -r -e '/^chr\\s/d' | sort -k1,1V -k2,2n | cat <(head -n1 {input[0]}) - > {output}
+```
+
+Here's full instruction of `script/split_vcf.random.py`:
+```
+usage: split_pesrtest_random.py [-h] [-s SIZE] input output
+
+positional arguments:
+  input                 namd of input vcf.gz to be splited
+  output                prefix of output
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s SIZE, --size SIZE  size of outputs
+```
+
 ## Output filesthi sformat: 
 Result from this step are kept under the `petest/` folder with names in the format: `{batch}.{source}.{chrom}.stats` 
 
