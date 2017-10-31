@@ -111,7 +111,7 @@ optional arguments:
   -s SIZE, --size SIZE  size of outputs
 ```
 
-## Output filesthi sformat: 
+## Output file format: 
 Result from this step are kept under the `petest/` folder with names in the format: `{batch}.{source}.{chrom}.stats` 
 
 
