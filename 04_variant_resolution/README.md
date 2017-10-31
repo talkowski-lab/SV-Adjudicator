@@ -32,6 +32,40 @@ This file should be modified according to different reference genome. It is reco
 * `cutoffs`: cutoff information trained from the Random Forest
 
 ### Input
+* `filtered_vcfs`: '../03_variant_filtering/filtered_vcfs/{batch}.{source}.{chrom}.vcf.gz'
+The vcf files that were filtered from previous step. `{source}` includes all pesr and depth callers included in the study
+
+## Manual process
+### Input
+* `filtered_vcfs`: '../03_variant_filtering/filtered_vcfs/{batch}.{source}.{chrom}.vcf.gz'
+The vcf files that were filtered from previous step. `{source}` includes all pesr and depth callers included in the study
+
+* `vcflist`: vcflists/pesr/{batch}.{chrom}.list,  vcflists/pesr_depth/{batch}.{chrom}.list
+Each list file contains the filtered vcf file from different algorithm on the same chromosome. Lists under `/pesr/` contains pesr calls while `pesr_depth` contains rd calls. Here's an example:
+``
+../03_variant_filtering/filtered_vcfs/{batch}.delly.10.vcf.gz
+../03_variant_filtering/filtered_vcfs/{batch}.lumpy.10.vcf.gz
+../03_variant_filtering/filtered_vcfs/{batch}.manta.10.vcf.gz
+../03_variant_filtering/filtered_vcfs/{batch}.wham.10.vcf.gz
+```
+### Process
+Follow these steps to process through this step:
+1. Cluster VCFs across algorithms
+```
+svtools vcfcluster vcflists/pesr/{batch}.10.list stdout -p {batch} -d dist -f frac -x blacklist -z svsize -t svtypes | vcf-sort -c | bgzip -c > vcfcluster/pesr/{batch}.10.vcf.gz
+tabix -p vcf vcfcluster/pesr/{batch}.10.vcf.gz
+```
+
+2. Link complex SVs:
+``` 
+svtools resolve -p {batch}_CPX_{chrom} vcfcluster/pesr_depth/{batch}.{chrom}.vcf.gz complex_linking/{batch}.{chrom}.resolved.vcf -u complex_linking/{batch}.{chrom}.unresolved.vcf
+```
+
+3. Merge raw vcfs 
+```
+vcf-concat vcfcluster/pesr_depth/{batch}.{chrom}.vcf.gz | bgzip -c > merged_vcfs/{batch}.alg_merged.vcf.gz
+tabix -p vcf merged_vcfs/{batch}.alg_merged.vcf.gz
+```
 
 ### Output
 
