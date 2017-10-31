@@ -63,7 +63,7 @@ svtools resolve -p {batch}_CPX_{chrom} vcfcluster/pesr_depth/{batch}.{chrom}.vcf
 
 3. Merge raw vcfs 
 ```
-vcf-concat vcfcluster/pesr_depth/{batch}.{chrom}.vcf.gz | bgzip -c > merged_vcfs/{batch}.alg_merged.vcf.gz
+vcf-concat vcfcluster/pesr_depth/{batch}.*.vcf.gz | bgzip -c > merged_vcfs/{batch}.alg_merged.vcf.gz
 tabix -p vcf merged_vcfs/{batch}.alg_merged.vcf.gz
 ```
 
