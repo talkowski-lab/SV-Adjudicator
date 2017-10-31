@@ -42,7 +42,7 @@ The vcf files that were filtered from previous step. `{source}` includes all pes
 
 * `vcflist`: vcflists/pesr/{batch}.{chrom}.list,  vcflists/pesr_depth/{batch}.{chrom}.list
 Each list file contains the filtered vcf file from different algorithm on the same chromosome. Lists under `/pesr/` contains pesr calls while `pesr_depth` contains rd calls. Here's an example:
-``
+```
 ../03_variant_filtering/filtered_vcfs/{batch}.delly.10.vcf.gz
 ../03_variant_filtering/filtered_vcfs/{batch}.lumpy.10.vcf.gz
 ../03_variant_filtering/filtered_vcfs/{batch}.manta.10.vcf.gz
