@@ -144,7 +144,7 @@ class PETestRunner(PESRTestRunner):
                    counts = self.null_score(record,null_val='NA')
             else:  
                    counts = self.petest.test_record(record, called, background )
-
+        print(counts)    
         counts = counts.rename(columns={'called': 'called_median',
                                         'background': 'bg_median'})
         counts.to_csv(self.fout, header=False, index=False,

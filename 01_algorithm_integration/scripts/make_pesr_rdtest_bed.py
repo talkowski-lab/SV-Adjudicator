@@ -37,7 +37,7 @@ def main():
         # Get bed interval and metadata
         chrom = record.chrom
         start = record.pos
-        end = record.info['END']
+        end = record.stop
         name = record.id
         svtype = record.info['SVTYPE']
 

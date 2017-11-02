@@ -25,6 +25,9 @@ if [ "$chrom" = "X" ]; then
           | cat <(head -n1 $input) - \
           > $inputfolder/$batch.$source.X.males.metrics
     python scripts/rd_merge_allosome.py $batch $source X $inputfolder $outputfolder
+    grep coverage_failure  $outputfolder/$batch.$source.$chrom.metrics > $outputfolder/$batch.$source.$chrom.throwout
+    grep -v coverage_failure  $outputfolder/$batch.$source.$chrom.metrics > $outputfolder/$batch.$source.$chrom.kept
+    mv $outputfolder/$batch.$source.$chrom.kept $outputfolder/$batch.$source.$chrom
 elif [ "$chrom" = "Y" ]; then
     cat $inputfolder/$batch.$source.Y.*.females.metrics \
           | sed -r -e '/^chr/d' \
@@ -37,11 +40,17 @@ elif [ "$chrom" = "Y" ]; then
           | cat <(head -n1 $input) - \
           > $inputfolder/$batch.$source.Y.males.metrics
     python scripts/rd_merge_allosome.py $batch $source Y $inputfolder $outputfolder
+    grep coverage_failure  $outputfolder/$batch.$source.$chrom.metrics > $outputfolder/$batch.$source.$chrom.throwout
+    grep -v coverage_failure  $outputfolder/$batch.$source.$chrom.metrics > $outputfolder/$batch.$source.$chrom.kept
+    mv $outputfolder/$batch.$source.$chrom.kept $outputfolder/$batch.$source.$chrom
 else
     cat $inputfolder/$batch.$source.$chrom.*.metrics \
           | sed -r -e '/^chr/d' \
           | sort -k1,1V -k2,2n \
           | cat <(head -n1 $input) - \
           > $outputfolder/$batch.$source.$chrom.metrics
+    grep coverage_failure  $outputfolder/$batch.$source.$chrom.metrics > $outputfolder/$batch.$source.$chrom.throwout
+    grep -v coverage_failure  $outputfolder/$batch.$source.$chrom.metrics > $outputfolder/$batch.$source.$chrom.kept
+    mv $outputfolder/$batch.$source.$chrom.kept $outputfolder/$batch.$source.$chrom
 fi
 

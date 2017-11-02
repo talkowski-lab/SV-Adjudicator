@@ -158,10 +158,15 @@ def process_metadata(variants, bed=False, batch_list=None):
 
         # Calculate parental VF
         parents = [s for s in called if _is_parent(s)]
-        parental_vf = len(parents) / n_parents
-
+        if n_parents > 0: 
+                parental_vf = len(parents) / n_parents
+        else:
+                parental_vf=0
         children = [s for s in called if _is_child(s)]
-        child_vf = len(children) / n_children
+        if n_children>0:
+               child_vf = len(children) / n_children
+        else:
+               child_vf=0
 
         if child_vf > 0:
             inh_rate = get_inh_rate(called)

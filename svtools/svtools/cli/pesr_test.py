@@ -51,7 +51,7 @@ def sr_test(argv):
     args = parser.parse_args(argv)
 
     vcf = pysam.VariantFile(args.vcf)
-    countfile = pysam.TabixFile(args.counts)
+    countfile = pysam.TabixFile(args.countfile)
 
     if args.fout in '- stdout'.split():
         fout = sys.stdout
@@ -102,11 +102,12 @@ def pe_test(argv):
         vcf = pysam.VariantFile(sys.stdin)
     else:
         vcf = pysam.VariantFile(args.vcf)
+
     if args.fout in '- stdout'.split():
         fout = sys.stdout
     else:
-        #fout = open(args.fout, 'w')
         fout=args.fout
+        #fout = open(args.fout, 'w')
     header = 'name log_pval called_median bg_median'.split()
     args.fout.write('\t'.join(header) + '\n')
 
