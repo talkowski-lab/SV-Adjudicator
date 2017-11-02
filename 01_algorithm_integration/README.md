@@ -152,8 +152,8 @@ svtools bedcluster ../00_preprocessing/std_beds/{batch}.{svtype}.bed.gz -r {chro
 2. Aggregate observations into variants and convert to RdTest format
 ```
 cat \
-  <(scripts/make_depth_rdtest_bed.py {batch}.DEL.{chrom}.bed} | sed '1d') \
-  <(scripts/make_depth_rdtest_bed.py {batch}.DUP.{chrom}.bed} | sed '1d') \
+  <(scripts/make_depth_rdtest_bed.py bedcluster/{batch}.DEL.{chrom}.bed | sed '1d') \
+  <(scripts/make_depth_rdtest_bed.py bedcluster/{batch}.DUP.{chrom}.bed | sed '1d') \
   | sort -k1,1V -k2,2n \
   | cat <(echo -e "#chrom start end name samples svtype" | sed -e 's/ /\\t/g') - \
   > rdtest_beds/{batch}.depth.{chrom}.bed
