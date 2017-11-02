@@ -147,7 +147,7 @@ Follow these steps to manually cluster depth calls:
 1. Cluter CNV calls
 
 ```
-svtools bedcluster ../00_preprocessing/std_beds/ -r {chrom} -p {batch}_depth_{svtype}_{chrom} > bedcluster/{batch}.{svtype}.{chrom}.bed
+svtools bedcluster ../00_preprocessing/std_beds/{batch}.{svtype}.bed.gz -r {chrom} -p {batch}_depth_{svtype}_{chrom} > bedcluster/{batch}.{svtype}.{chrom}.bed
 ```
 2. Aggregate observations into variants and convert to RdTest format
 ```
