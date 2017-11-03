@@ -132,10 +132,11 @@ Follow these steps to manually cluster pair-end split read (pesr) calls:
 
 1. Cluster all VCFs in a batch from a given algorithm
 ```
-svtype vcfcluster vcflists/{batch}.{source}.list vcfcluster/{batch}.{source}.{chrom}.vcf -r {chrom}
-bgzip vcfcluster/{batch}.{source}.{chrom}.vcf
+svtools vcfcluster vcflists/{batch}.{source}.list stdout -r {chrom} -d 300 -f 0.1 -x {blacklist} -z 0 -t {SVtype} | vcf-sort -c | bgzp -c > vcfcluster/{batch}.{source}.{chrom}.vcf.gz 
 tabix vcfcluster/{batch}.{source}.{chrom}.vcf.gz
 ```
+note: `SVtype` usually represents `DEL,DUP,INV,BND` for **pesr** caller and `INS` for **MEI** caller
+
 2. Convert to RdTest format
 ```
 python scripts/make_pesr_rdtest_bed.py vcfcluster/{batch}.{source}.{chrom}.vcf.gz rdtest_beds/{batch}.{source}.{chrom}.bed
