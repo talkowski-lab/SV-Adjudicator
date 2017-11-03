@@ -78,7 +78,7 @@ svtools resolve -p {batch}_CPX_{chrom} vcfcluster/pesr_depth/{batch}.{chrom}.vcf
 vcf-concat vcfcluster/pesr_depth/{batch}.*.vcf.gz | bgzip -c > merged_vcfs/{batch}.alg_merged.vcf.gz
 tabix -p vcf merged_vcfs/{batch}.alg_merged.vcf.gz
 ```
->>>>>>> 46f2025b25bec4c0970c1d52a4b4436fc97b8e1a
+
 
 ### Output
 
