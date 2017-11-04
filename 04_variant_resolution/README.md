@@ -49,17 +49,7 @@ Each list file contains the filtered vcf file from different algorithm on the sa
 ../03_variant_filtering/filtered_vcfs/{batch}.manta.20.vcf.gz
 ../03_variant_filtering/filtered_vcfs/{batch}.wham.20.vcf.gz
 ```
-### Process
-Follow these steps to process through this step:
 
-
-=======
-```
-../03_variant_filtering/filtered_vcfs/{batch}.delly.10.vcf.gz
-../03_variant_filtering/filtered_vcfs/{batch}.lumpy.10.vcf.gz
-../03_variant_filtering/filtered_vcfs/{batch}.manta.10.vcf.gz
-../03_variant_filtering/filtered_vcfs/{batch}.wham.10.vcf.gz
-```
 ### Process
 Follow these steps to process through this step:
 1. Cluster VCFs across algorithms
