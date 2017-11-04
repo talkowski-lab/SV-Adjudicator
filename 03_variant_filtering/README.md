@@ -54,6 +54,7 @@ python scripts/aggregate.py \
 	-s ../02_evidence_assessment/02c_srtest/srtest/{batch}.{source}.{chrom}.stats \
 	-b ../02_evidence_assessment/02d_baftest/baftest/{batch}.{source}.{chrom}.stats \
 	-v ../01_algorithm_integration/vcfcluster/{batch}.{source}.{chrom}.vcf.gz \
+	--fam ../ref/{batch}.fam \
 	metrics/{batch}.{source}.{chrom}.metrics
 ```
 
@@ -64,8 +65,30 @@ python scripts/aggregate.py \
 	-b ../02_evidence_assessment/02d_baftest/baftest/{batch}.{source}.{chrom}.stats \
 	-v ../01_algorithm_integration/rdtest_beds/{batch}.{source}.{chrom}.bed \
 	--bed \
+        --fam ../ref/{batch}.fam \
 	metrics/{batch}.{source}.{chrom}.metrics
 ```
+note:  ../ref/{batch}.fam describes family structure of samples included in the study. Here's an example of the format:
+`fam_name sample_name father_name mother_name sex case_vs_control`
+```
+11711	11711.fa	0	0	1	1
+11711	11711.mo	0	0	2	1
+11711	11711.p1	11711.fa	11711.mo	1	2
+11711	11711.s1	11711.fa	11711.mo	1	1
+11942	11942.fa	0	0	1	1
+11942	11942.mo	0	0	2	1
+11942	11942.p1	11942.fa	11942.mo	1	2
+11942	11942.s1	11942.fa	11942.mo	1	1
+12798	12798.fa	0	0	1	1
+12798	12798.mo	0	0	2	1
+12798	12798.p1	12798.fa	12798.mo	1	2
+12798	12798.s1	12798.fa	12798.mo	2	1
+14460	14460.fa	0	0	1	1
+14460	14460.mo	0	0	2	1
+14460	14460.p1	14460.fa	14460.mo	1	2
+14460	14460.s1	14460.fa	14460.mo	2	1
+```
+
 
 c. To aggregate evidence for **mobile element insertion callers** (eg. MELT), for `{source}` and `{chrom}`: 
 ```
