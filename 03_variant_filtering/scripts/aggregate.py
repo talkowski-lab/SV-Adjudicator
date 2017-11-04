@@ -29,7 +29,8 @@ def process_rdtest(rdtest):
     # Replace strings with NA
     for col in numeric_cols:
         repl = ['All_samples_called_CNV_no_analysis',
-                'No_samples_for_analysis']
+                'No_samples_for_analysis',
+                'coverage_failure']
         rdtest[col] = rdtest[col].replace(repl, np.nan).astype(np.float)
 
     rdtest['log_pval'] = -np.log10(rdtest.P)
