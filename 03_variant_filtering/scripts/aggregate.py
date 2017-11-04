@@ -5,7 +5,6 @@
 # Distributed under terms of the MIT license.
 
 """
-
 """
 
 import argparse
@@ -106,15 +105,38 @@ def _is_parent(s):
 
 
 def _is_child(s):
-    return s.endswith('p1') or s.endswith('s1')
+    return s.endswith('p1') or s.endswith('s1') or s.endswith('pb')
+
+
+def fam_info_readin(fam_file):
+        fin=open(fam_file)
+        samp_pedi_hash={}
+        [fam, samp, fa,mo]=[[],[],[],[]]
+        for line in fin:
+                pin=line.strip().split()
+                fam.append(pin[0])
+                samp.append(pin[1])
+                fa.append(pin[2])
+                mo.append(pin[3])
+        fin.close()
+        return [fam, samp, fa,mo]
 
 
 def get_inh_rate(called):
     quads = defaultdict(list)
 
+    fam_file = args.fam
+    [fam, samp, fa,mo] = fam_info_readin(fam_file)
+
     for sample in called:
-        quad, member = sample.split('.')
-        quads[quad].append(member)
+        if 'fa' in sample or 'mo' in sample or 'p1' in sample or 's1' in sample:
+            quad, member = sample.split('.')
+            quads[quad].append(member)
+        else:
+            quad = fam[samp.index(sample)]
+            if sample in fa: member = 'fa'
+            elif sample in mo: member = 'mo'
+            else:   member='pb'
 
     n_called = len([s for s in called if _is_child(s)])
 
@@ -124,6 +146,8 @@ def get_inh_rate(called):
             if 'p1' in members:
                 n_inh += 1
             if 's1' in members:
+                n_inh += 1
+            if 'pb' in members:
                 n_inh += 1
 
     return n_inh / n_called
@@ -235,8 +259,10 @@ def main():
     parser.add_argument('-s', '--SRtest')
     parser.add_argument('-p', '--PEtest')
     parser.add_argument('--batch-list', type=argparse.FileType('r'))
+    parser.add_argument('--fam')
     parser.add_argument('-d', '--bed', action='store_true', default=False)
     parser.add_argument('fout')
+    global args
     args = parser.parse_args()
 
     if args.bed:
