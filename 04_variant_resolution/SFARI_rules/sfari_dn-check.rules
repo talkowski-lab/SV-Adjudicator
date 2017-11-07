@@ -1,0 +1,128 @@
+
+PESR_SOURCES = config['pesr_sources']
+
+# rule pesr_dn_check:
+#     input:
+#         vcf='vcfcluster/{evidence}/{rf_status}/{batch}.{chrom}.vcf.gz',
+#     output:
+#         petest='denovo/{evidence}/{rf_status}/petest/{batch}.{chrom}.stats',
+#         srtest='denovo/{evidence}/{rf_status}/srtest/{batch}.{chrom}.stats',
+#     shell:
+#         """
+#         {config[scripts]}/dn-check.py {input.vcf} \
+#           -c {config[sr_counts]} -d {config[pe_counts]} \
+#           {output.petest} {output.srtest}
+#         """
+# 
+# rule make_rdtest_beds:
+#     input:
+#         vcf='vcfcluster/{evidence}/{rf_status}/{batch}.{chrom}.vcf.gz',
+#     output:
+#         bed='denovo/{evidence}/{rf_status}/rdtest_beds/{batch}.{chrom}.bed',
+#     shell:
+#         """
+#         {config[scripts]}/get_denovo_candidates.py {input.vcf} stdout \
+#           | svtools vcf2bed stdin stdout \
+#           | fgrep -e "DEL" -e "DUP" -e "#chrom" \
+#           | awk -v OFS="\\t" '{{print $1, $2, $3, $4, $6, $5}}' \
+#           > {output.bed}
+#         """
+# 
+# rule rd_dn_check:
+#     input:
+#         bed='denovo/{evidence}/{rf_status}/rdtest_beds/{batch}.{chrom}.bed',
+#     output:
+#         'denovo/{evidence}/{rf_status}/rdtest/{batch}.{chrom}.denovo'
+#     params:
+#         whitelist=lambda wildcards: config['samples'][wildcards.batch]
+#     shell:
+#         """
+#         Rscript {config[rdtest]} \
+#           -b {input.bed} \
+#           -c {config[coveragefile]} \
+#           -m {config[medianfile]} \
+#           -f {config[famfile]} \
+#           -o denovo/{wildcards.evidence}/{wildcards.rf_status}/rdtest/ \
+#           -n {wildcards.batch}.{wildcards.chrom} \
+#           -w {params.whitelist} \
+#           -d True
+#         """
+# 
+# rule reformat_dn_rdtest:
+#     input:
+#         dn_metrics='denovo/{evidence}/{rf_status}/rdtest/{batch}.{chrom}.denovo'
+#     output:
+#         metrics='denovo/{evidence}/{rf_status}/rdtest/{batch}.{chrom}.metrics'
+#     shell:
+#         """
+#         {config[scripts]}/reformat_dn_rdtest.py {input.dn_metrics} {output.metrics}
+#         """
+
+def get_tests(wildcards):
+    if wildcards.evidence == 'depth':
+        tests = 'denovo/{evidence}/{rf_status}/rdtest/{batch}.{chrom}.stats'
+        tests = [tests.format(**wildcards)]
+    else:
+        tests = ['denovo/{evidence}/{rf_status}/petest/{batch}.{chrom}.stats',
+                 'denovo/{evidence}/{rf_status}/srtest/{batch}.{chrom}.stats',
+                 'denovo/{evidence}/{rf_status}/rdtest/{batch}.{chrom}.stats']
+        tests = [t.format(**wildcards) for t in tests]
+
+    return tests
+
+
+def get_test_flags(wildcards):
+    if wildcards.evidence == 'depth':
+        tests = '-r denovo/{evidence}/{rf_status}/rdtest/{batch}.{chrom}.stats'
+        flags = tests.format(**wildcards)
+    else:
+        tests = ['-p denovo/{evidence}/{rf_status}/petest/{batch}.{chrom}.stats',
+                 '-s denovo/{evidence}/{rf_status}/srtest/{batch}.{chrom}.stats',
+                 '-r denovo/{evidence}/{rf_status}/rdtest/{batch}.{chrom}.stats']
+        tests = [t.format(**wildcards) for t in tests]
+        flags = ' '.join(tests)
+
+    return tests
+        
+rule aggregate_dn_metrics:
+    input:
+        vcf='vcfcluster/{evidence}/{rf_status}/{batch}.{chrom}.vcf.gz',
+        tests=get_tests
+    output:
+        'denovo/{evidence}/{rf_status}/metrics/{batch}.{chrom}.metrics'
+    params:
+        flags=lambda wildcards: '-d' if wildcards.evidence == 'depth' else '',
+        tests=get_test_flags
+    shell:
+        """
+        {config[scripts]}/aggregate_dn.py {params.flags} {input.vcf} {output} \
+            {params.tests}
+        """
+
+rule filter_dn_metrics:
+    input:
+        metrics='denovo/{evidence}/{rf_status}/metrics/{batch}.{chrom}.metrics',
+    output:
+        'denovo/{evidence}/{rf_status}/dn_filter/{batch}.{chrom}.txt'
+    params:
+        cutoffs=lambda wildcards: config['cutoffs'][wildcards.batch]
+    shell:
+        """
+        {config[scripts]}/filter_dn_metrics.py {input.metrics} {params.cutoffs} \
+          {output}
+        """
+
+rule filter_dn_variants:
+    input:
+        vcf='vcfcluster/{evidence}/{rf_status}/{batch}.{chrom}.vcf.gz',
+        filtered='denovo/{evidence}/{rf_status}/dn_filter/{batch}.{chrom}.txt'
+    output:
+        vcf='denovo/{evidence}/{rf_status}/filtered_vcfs/{batch}.{chrom}.vcf.gz',
+        tbi='denovo/{evidence}/{rf_status}/filtered_vcfs/{batch}.{chrom}.vcf.gz.tbi'
+    shell:
+        """
+        {config[scripts]}/filter_dn_variants.py {input.vcf} {input.filtered} - \
+          | bgzip -c \
+          > {output.vcf};
+        tabix -p vcf {output.vcf}
+        """

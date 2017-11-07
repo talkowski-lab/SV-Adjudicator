@@ -1,0 +1,94 @@
+"""
+pesr_integration.rules
+Matthew Stone <mstone5@mgh.harvard.edu>
+
+Cluster SV after filtering based on PE, SR, RD, and BAF evidence. 
+"""
+
+import pandas as pd
+
+PESR_SOURCES = config['pesr_sources']
+with open(config['chroms']) as clist:
+    CHROMS = [c.strip() for c in clist.readlines()]
+
+localrules: all, make_vcf_list
+
+def get_batch_vcfs(wildcards):
+    """Collect all VCFs for a batch/chrom pairing across sources"""
+
+    if wildcards.status == 'pass':
+        vcf_dir = config['filtered_vcfs']
+    else:
+        vcf_dir = config['fail_vcfs']
+    vcf_path = os.path.join(vcf_dir, '{batch}.{source}.{chrom}.vcf.gz')
+
+    if wildcards.sources == 'pesr':
+        return [vcf_path.format(batch=wildcards.batch, source=source,
+                            chrom=wildcards.chrom)
+                for source in PESR_SOURCES]
+
+    elif wildcards.sources == 'pesr_depth':
+        return ['vcfcluster/pesr/{batch}.{chrom}.vcf.gz'.format(**wildcards),
+                vcf_path.format(**wildcards, source='depth')]
+
+# Make list of all algorithm VCFs for each batch/chrom combo
+rule make_vcf_list:
+    input:
+        get_batch_vcfs
+    output:
+        vcflist='vcflists/{status}/{sources}/{batch}.{chrom}.list'
+    run:
+        with open(output[0], 'w') as fout:
+            for fname in sorted(input):
+                fout.write(fname + '\n')
+
+# Cluster VCFs across algorithms
+rule vcfcluster:
+    """Cluster calls from a single algorithm across samples."""
+    input:
+        vcflist=rules.make_vcf_list.output.vcflist
+    output:
+        vcf='vcfcluster/{status}/{sources}/{batch}.{chrom}.vcf.gz',
+        tbi='vcfcluster/{status}/{sources}/{batch}.{chrom}.vcf.gz.tbi',
+    params:
+        vcfcluster=lambda wildcards: config['vcfcluster'][wildcards.sources],
+        prefix=lambda wildcards: '{0}'.format(wildcards.batch)
+    shell:
+        """
+        svtools vcfcluster {input} stdout \
+            -p {params.prefix} \
+            -d {params.vcfcluster[dist]} \
+            -f {params.vcfcluster[frac]} \
+            -x {params.vcfcluster[blacklist]} \
+            -z {params.vcfcluster[svsize]} \
+            -t {params.vcfcluster[svtypes]} \
+          | vcf-sort -c \
+          | bgzip -c > {output.vcf};
+        tabix -p vcf {output.vcf};
+        """
+
+# rule link_cpx:
+#     input:
+#         vcf='vcfcluster/pass/pesr_depth/{batch}.{chrom}.vcf.gz',
+#     output:
+#         bed='complex_linking/{batch}.{chrom}.resolved.vcf',
+#         unresolved='complex_linking/{batch}.{chrom}.unresolved.vcf',
+#     params:
+#         prefix=lambda wildcards: '{batch}_CPX_{chrom}'.format(**wildcards)
+#     shell:
+#         """
+#         svtools resolve -p {params.prefix} {input.vcf} {output.bed} -u {output.unresolved}
+#         """
+
+rule merge_raw_vcfs:
+    input:
+        vcfs=expand('vcfcluster/pass/pesr_depth/{{batch}}.{chrom}.vcf.gz', chrom=CHROMS)
+    output:
+        vcf='merged_vcfs/{batch}.alg_merged.vcf.gz',
+        tbi='merged_vcfs/{batch}.alg_merged.vcf.gz.tbi'
+    shell:
+        """
+        vcf-concat {input.vcfs} | bgzip -c > {output.vcf};
+        tabix -p vcf {output.vcf}
+        """
+

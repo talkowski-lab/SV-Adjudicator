@@ -1,0 +1,64 @@
+
+import pandas as pd
+import pysam
+
+with open(config['chroms']) as clist:
+    CHROMS = [c.strip() for c in clist.readlines()]
+
+
+rule filter_melt:
+    input:
+        vcf=os.path.join(config['raw_vcfs'], "{batch}.melt.{chrom}.vcf.gz")
+    output:
+        "melt/filtered_vcfs/{batch}.{chrom}.vcf.gz"
+    params:
+        passes=lambda wildcards: config['melt_beds'][wildcards.batch]
+    shell:
+        """
+        cat \
+            <(zcat {input.vcf} | sed -n -e '/^#/p') \
+            <(zcat {input.vcf} | sed -e '/^#/d' | fgrep -w -f <(cut -f 4 {params.passes})) \
+          | bgzip -c > {output}
+        """
+
+rule melt_dn_filter:
+    input:
+        "melt/filtered_vcfs/{batch}.{chrom}.vcf.gz"
+    output:
+        "melt/dn_filtered_vcfs/{batch}.{chrom}.vcf.gz"
+    shell:
+        """
+        {config[scripts]}/melt_dn_filter.py \
+          {input} {config[melt_dn_filter]} {output}
+        """
+
+rule merge_melt_batches:
+    input:
+        phase1="melt/dn_filtered_vcfs/Phase1.{chrom}.vcf.gz",
+        pilot="melt/dn_filtered_vcfs/Pilot.{chrom}.vcf.gz",
+    output:
+        vcflist=temp("melt/batch_merged/SSC.{chrom}.vcflist"),
+        vcf="melt/batch_merged/SSC.{chrom}.vcf.gz"
+    params:
+        prefix=lambda wildcards: "SSC_melt_{chrom}".format(**wildcards)
+    shell:
+        """
+        echo {input.phase1} > {output.vcflist};
+        echo {input.pilot} >> {output.vcflist};
+        svtools vcfcluster {output.vcflist} stdout \
+            -p {params.prefix} \
+            -d 300 -f 0.1 --preserve-ids -t INS \
+          | vcf-sort -c \
+          | bgzip -c > {output.vcf}
+        """
+
+rule reorder_melt_columns:
+    input:
+        vcf="melt/batch_merged/SSC.{chrom}.vcf.gz",
+        template='complex_resolution/resolved_plus_cnv/SSC.{chrom}.vcf.gz'
+    output:
+        vcf="melt/reordered_columns/SSC.{chrom}.vcf.gz"
+    shell:
+        """
+        vcf-shuffle-cols -t {input.template} {input.vcf} | bgzip -c > {output}
+        """

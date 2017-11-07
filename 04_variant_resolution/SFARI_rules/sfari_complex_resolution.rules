@@ -1,0 +1,128 @@
+
+import pandas as pd
+import pysam
+
+with open(config['chroms']) as clist:
+    CHROMS = [c.strip() for c in clist.readlines()]
+
+rule resolve_cpx:
+    input:
+        #vcf='batch_integration/sfari_filtered/SSC.{chrom}.vcf.gz',
+        vcf='ctx_filtering/filtered_vcfs/SSC.{chrom}.vcf.gz',
+    output:
+        resolved='complex_resolution/resolved/SSC.{chrom}.vcf',
+        unresolved='complex_resolution/unresolved/SSC.{chrom}.vcf',
+    params:
+        prefix=lambda wildcards: 'SSC_CPX_{chrom}'.format(**wildcards)
+    shell:
+        """
+        svtools resolve -p {params.prefix} -u {output.unresolved} \
+            {input.vcf} {config[cytobands]} {output.resolved} 
+        """
+
+# TEMP FIX: Add CNV from unresolved events back to VCF
+rule restore_unresolved_cnv:
+    input:
+        resolved='complex_resolution/resolved/SSC.{chrom}.vcf',
+        unresolved='complex_resolution/unresolved/SSC.{chrom}.vcf',
+    output:
+        vcf='complex_resolution/resolved_plus_cnv/SSC.{chrom}.vcf.gz'
+    shell:
+        """
+        fgrep -e "<DEL>" -e "<DUP>" {input.unresolved} \
+          | sed -r -e 's/;EVENT=UNRESOLVED.*UNRESOLVED//' \
+          | cat {input.resolved} - \
+          | vcf-sort -c \
+          | bgzip -c \
+          > {output.vcf}
+        """
+
+rule overlap_melt:
+    input:
+        resolved='complex_resolution/resolved_plus_cnv/SSC.{chrom}.vcf.gz',
+        #melt="melt/batch_merged/SSC.{chrom}.vcf.gz"
+        melt="melt/reordered_columns/SSC.{chrom}.vcf.gz"
+    output:
+        vcf='complex_resolution/resolved_with_melt/SSC.{chrom}.vcf.gz',
+    shell:
+        """
+        {config[scripts]}/integrate_melt.py {input.resolved} {input.melt} stdout \
+          | bgzip -c > {output}
+        """
+
+rule make_resolved_bed:
+    input:
+        'complex_resolution/resolved_with_melt/SSC.{chrom}.vcf.gz'
+    output:
+        'complex_resolution/resolved_with_melt/SSC.{chrom}.bed'
+    shell:
+        """
+        svtools vcf2bed {input} {output}
+        """
+
+rule concat_resolved_beds:
+    input:
+        expand('complex_resolution/resolved_with_melt/SSC.{chrom}.bed', chrom=CHROMS)
+    output:
+        'complex_resolution/resolved_with_melt/SSC.bed'
+    shell:
+        """
+        cat {input} \
+          | fgrep -v -e "#chrom" \
+          | sort -k1,1V -k2,2n \
+          | cat <(head -n1 {input[0]}) - \
+          > {output}
+        """
+
+rule sample_cnv_merge:
+    input:
+        bed='complex_resolution/resolved_with_melt/SSC.bed'
+    output:
+        'complex_resolution/sample_cnv_merging/{sample}.bed'
+    wildcard_constraints:
+        chrom='(' + '|'.join(CHROMS) + ')',
+        sample='(' + '|'.join(SAMPLES) + ')'
+    shell:
+        """
+        cat \
+            <( awk '($5=="DEL")' {input.bed} \
+                 | fgrep -w -e "{wildcards.sample}"  \
+                 | bedtools merge -i stdin -c 4 -o distinct) \
+            <( awk '($5=="DUP")' {input.bed} \
+                 | fgrep -w -e "{wildcards.sample}"  \
+                 | bedtools merge -i stdin -c 4 -o distinct) \
+          | sort -k1,1V -k2,2n \
+          | cat <(head -n1 {input.bed}) - \
+          | fgrep -e "," -e "#chrom" \
+          > {output}
+        """
+
+rule link_merged_cnv:
+    input:
+        expand('complex_resolution/sample_cnv_merging/{sample}.bed',
+               sample=SAMPLES)
+    output:
+        'complex_resolution/sample_cnv_merging/SSC.links'
+    shell:
+        """
+        cat {input} \
+          | sed -e '/^#chrom/d' \
+          | cut -f 4 \
+          | {config[scripts]}/make_link_combos.py \
+          | sort -u \
+          > {output}
+        """
+
+rule merge_resolved_variants:
+    input:
+        vcf='complex_resolution/resolved_with_melt/SSC.{chrom}.vcf.gz',
+        links='complex_resolution/sample_cnv_merging/SSC.links'
+    output:
+        'complex_resolution/resolved_and_merged/SSC.{chrom}.vcf.gz'
+    shell:
+        """
+        {config[scripts]}/merge_linked_depth_calls.py \
+            --flag-multiallelic {config[multiallelic]} {input.vcf} {input.links} stdout \
+          | vcf-sort -c \
+          | bgzip -c > {output}
+        """

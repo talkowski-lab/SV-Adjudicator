@@ -1,0 +1,139 @@
+
+import pandas as pd
+import pysam
+
+with open(config['chroms']) as clist:
+    CHROMS = [c.strip() for c in clist.readlines()]
+
+rule overlap_pass:
+    input:
+        phase1='denovo/{evidence}/pass/filtered_vcfs/Phase1.{chrom}.vcf.gz',
+        pilot='denovo/{evidence}/raw/filtered_vcfs/Pilot.{chrom}.vcf.gz',
+    output:
+        vcf='batch_integration/{evidence}/phase1_pilots/SSC.{chrom}.vcf.gz',
+    shell:
+        """
+        {config[scripts]}/overlap_pass.py {input.phase1} {input.pilot} stdout \
+            --prefix SSC_pilotPhase1_{wildcards.chrom}_{wildcards.evidence} \
+          | bgzip -c > {output.vcf}
+        """
+
+rule remove_added_pilot_variants:
+    input:
+        overlap='batch_integration/{evidence}/phase1_pilots/SSC.{chrom}.vcf.gz',
+        raw='vcfcluster/{evidence}/raw/Pilot.{chrom}.vcf.gz',
+        filtered='denovo/{evidence}/pass/filtered_vcfs/Pilot.{chrom}.vcf.gz',
+    output:
+        'batch_integration/{evidence}/pilot_filtered/Pilot.{chrom}.vcf'
+    shell:
+        """
+        {config[scripts]}/remove_added_pilot_variants.py {input.overlap} \
+            {input.raw} {input.filtered} {output}
+        """
+
+rule overlap_fail:
+    input:
+        pilot='batch_integration/{evidence}/pilot_filtered/Pilot.{chrom}.vcf',
+        phase1='vcfcluster/{evidence}/fail/Phase1.{chrom}.vcf.gz',
+    output:
+        'batch_integration/{evidence}/pilot_only/SSC.{chrom}.vcf.gz'
+    shell:
+        """
+        {config[scripts]}/overlap_fail.py {input.phase1} {input.pilot} stdout \
+            --prefix SSC_pilotOnly_{wildcards.chrom}_{wildcards.evidence} \
+          | bgzip -c > {output}
+        """
+
+rule merge_batches:
+    input:
+        phase1='batch_integration/{evidence}/phase1_pilots/SSC.{chrom}.vcf.gz',
+        pilots='batch_integration/{evidence}/pilot_only/SSC.{chrom}.vcf.gz'
+    output:
+        vcf='batch_integration/{evidence}/merged/SSC.{chrom}.vcf.gz',
+        tbi='batch_integration/{evidence}/merged/SSC.{chrom}.vcf.gz.tbi'
+    wildcard_constraints:
+        evidence='(pesr|depth)'
+    shell:
+        """
+        vcf-concat {input} | vcf-sort -c | bgzip -c > {output.vcf};
+        tabix -p vcf {output.vcf}
+        """
+
+rule cnv_size_filter:
+    input:
+        vcf='batch_integration/{evidence}/merged/SSC.{chrom}.vcf.gz',
+    output:
+        vcf='batch_integration/{evidence}/size_filtered/SSC.{chrom}.vcf.gz',
+    params:
+        min_size=lambda wildcards: 5000 if wildcards.evidence == 'depth' else 50
+    run:
+        vcf = pysam.VariantFile(input.vcf)
+        fout = pysam.VariantFile(output.vcf, 'w', header=vcf.header)
+        for record in vcf:
+            if record.info['SVTYPE'] not in 'DEL DUP'.split():
+                fout.write(record)
+            elif record.stop - record.pos >= params.min_size:
+                fout.write(record)
+
+rule merge_pesr_depth:
+    input:
+        pesr='batch_integration/pesr/size_filtered/SSC.{chrom}.vcf.gz',
+        depth='batch_integration/depth/link_merged/SSC.{chrom}.vcf.gz',
+    output:
+        vcf='batch_integration/pesr_depth/SSC.{chrom}.vcf.gz',
+        tbi='batch_integration/pesr_depth/SSC.{chrom}.vcf.gz.tbi',
+    shell:
+        """
+        {config[scripts]}/merge_pesr_depth.py --prefix SSC_merged_{wildcards.chrom} \
+            {input.pesr} {input.depth} stdout \
+          | bgzip -c > {output.vcf};
+        tabix -p vcf {output.vcf}
+        """
+
+rule sfari_filters:
+    input:
+        vcf='batch_integration/pesr_depth/SSC.{chrom}.vcf.gz',
+    output:
+        vcf='batch_integration/sfari_filtered/SSC.{chrom}.vcf.gz',
+        tbi='batch_integration/sfari_filtered/SSC.{chrom}.vcf.gz.tbi',
+    shell:
+        """
+        {config[scripts]}/sfari_filters.py {input.vcf} stdout \
+          | bgzip -c > {output.vcf};
+        tabix -p vcf {output.vcf}
+        """
+
+rule merge_vcfs:
+    input:
+        expand('batch_integration/sfari_filtered/SSC.{chrom}.vcf.gz', chrom=CHROMS)
+    output:
+        vcf='batch_integration/SSC.vcf.gz',
+        tbi='batch_integration/SSC.vcf.gz.tbi'
+    shell:
+        """
+        vcf-concat {input} | vcf-sort -c | bgzip -c > {output.vcf};
+        tabix -p vcf {output.vcf}
+        """
+
+rule get_denovo:
+    input:
+        vcf='batch_integration/sfari_filtered/SSC.{chrom}.vcf.gz',
+    output:
+        bed='batch_integration/denovo_cnv/SSC.{chrom}.bed',
+    shell:
+        """
+        {config[scripts]}/get_denovo_candidates.py {input.vcf} stdout \
+          | svtools vcf2bed stdin stdout \
+          | fgrep -e DEL -e DUP \
+          > {output.bed}
+        """
+
+rule merge_denovo:
+    input:
+        expand('batch_integration/denovo_cnv/SSC.{chrom}.bed', chrom=CHROMS)
+    output:
+        'batch_integration/SSC.denovo.bed'
+    shell:
+        """
+        cat {input} > {output}
+        """

@@ -1,0 +1,125 @@
+
+rule genotype_homozygous:
+    input:
+        'complex_resolution/resolved_and_merged/SSC.{chrom}.vcf.gz'
+    output:
+        'complex_resolution/with_homozygous/SSC.{chrom}.vcf.gz'
+    shell:
+        """
+        {config[scripts]}/mark_homozygous.py {input} {config[homozygotes]} stdout \
+          | bgzip -c > {output}
+        """
+
+rule filter_blacklist:
+    input:
+        'complex_resolution/with_homozygous/SSC.{chrom}.vcf.gz'
+    output:
+        'complex_resolution/blacklist_filtered/SSC.{chrom}.vcf.gz'
+    shell:
+        """
+        {config[scripts]}/filter_blacklist.sh {input} {config[blacklist]} \
+          | sort -u \
+          | fgrep -v -w -f - <(zcat {input}) \
+          | bgzip -c \
+          > {output}
+        """
+
+rule make_blacklist_filtered_bed:
+    input:
+        'complex_resolution/blacklist_filtered/SSC.{chrom}.vcf.gz'
+    output:
+        'complex_resolution/blacklist_filtered/SSC.{chrom}.bed'
+    shell:
+        """
+        svtools vcf2bed {input} {output}
+        """
+
+rule self_intersect:
+    input:
+        'complex_resolution/blacklist_filtered/SSC.{chrom}.bed'
+    output:
+        'complex_resolution/eliminate_redundancies/SSC.redundancies.{chrom}.txt'
+    shell:
+        """
+        bedtools intersect -a {input} -b {input} -wa -wb -r -f 0.9 \
+          | awk '($5==$11 && $4!=$10)' \
+          | cut -f 4,10 \
+          > {output}
+        """
+   
+rule eliminate_redundancies:
+    input:
+        vcf='complex_resolution/blacklist_filtered/SSC.{chrom}.vcf.gz',
+        links='complex_resolution/eliminate_redundancies/SSC.redundancies.{chrom}.txt'
+    output:
+        'complex_resolution/eliminate_redundancies/SSC.{chrom}.vcf.gz'
+    shell:
+        """
+        {config[scripts]}/eliminate_redundancies.py {input.vcf} {input.links} stdout \
+          | vcf-sort -c \
+          | bgzip -c \
+          > {output}
+        """
+
+# rule finalize_variants:
+#     input:
+#         'complex_resolution/eliminate_redundancies/SSC.{chrom}.vcf.gz'
+#     output:
+#         'final_variants/SSC.{chrom}.vcf.gz'
+#     shell:
+#         """
+#         {config[scripts]}/final_filter.py --chrom {wildcards.chrom} \
+#             {input} {config[final_filter]} - \
+#           | vcf-sort -c \
+#           | {config[scripts]}/rename.py --chrom {wildcards.chrom} - - \
+#           | bgzip -c \
+#           > {output};
+#         tabix --force -p vcf {output}
+#         """
+
+rule merge_variants:
+    input:
+        expand('final_variants/SSC.{chrom}.vcf.gz', chrom=CHROMS)
+    output:
+        'final_variants/SSC.vcf.gz'
+    shell:
+        """
+        vcf-concat {input} | vcf-sort -c | bgzip -c > {output}
+        """
+
+rule make_variant_bed:
+    input:
+        'final_variants/SSC.vcf.gz'
+    output:
+        'final_variants/SSC.bed'
+    shell:
+        """
+        svtools vcf2bed {input} {output} -i CHR2 -i END -i CPX_TYPE
+        """
+    
+rule scrape_stats:
+    input:
+        vcf='final_variants/SSC.{chrom}.vcf.gz',
+    output:
+        var='callset_stats/variant_stats/SSC.{chrom}.txt',
+        obs='callset_stats/sample_stats/SSC.{chrom}.txt',
+    shell:
+        """
+        {config[scripts]}/scrape_stats.py {input.vcf} \
+            {config[samples][Phase1]} {config[samples][Pilot]} {config[samples][European]} \
+            {output.var} {output.obs}
+        """
+
+rule merge_stats:
+    input:
+        expand('callset_stats/{{stat}}/SSC.{chrom}.txt',
+               chrom=CHROMS)
+    output:
+        'callset_stats/SSC.v3.{stat}.csv'
+    run:
+        dfs = []
+        for df in input:
+            dfs.append(pd.read_table(df))
+        df = pd.concat(dfs)
+        df.to_csv(output[0], index=False, na_rep='NA')
+

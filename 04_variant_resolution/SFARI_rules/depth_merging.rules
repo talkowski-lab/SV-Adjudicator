@@ -1,0 +1,72 @@
+
+import pandas as pd
+
+BATCH_KEY = pd.read_table(config['batches'])
+SAMPLES = list(BATCH_KEY['sample'].unique())
+CHROMS = [str(x) for x in range(1, 23)] + 'X Y'.split()
+
+
+rule merge_size_filtered_vcfs:
+    input:
+        expand('batch_integration/depth/size_filtered/SSC.{chrom}.vcf.gz', chrom=CHROMS)
+    output:
+        'batch_integration/depth/size_filtered_merged/SSC.vcf.gz'
+    shell:
+        """
+        vcf-concat {input} | vcf-sort -c | bgzip -c > {output}
+        """
+
+rule per_sample_merge:
+    input:
+        vcf='batch_integration/depth/size_filtered_merged/SSC.vcf.gz',
+    output:
+        'batch_integration/depth/sample_merged/{sample}.bed'
+    wildcard_constraints:
+        chrom='(' + '|'.join(CHROMS) + ')',
+        sample='(' + '|'.join(SAMPLES) + ')'
+    shell:
+        """
+        cat \
+            <( svtools vcf2bed {input.vcf} stdout \
+                 | awk '($5=="DEL")' \
+                 | fgrep -w -e "{wildcards.sample}"  \
+                 | bedtools merge -i stdin -c 4 -o distinct) \
+            <( svtools vcf2bed {input.vcf} stdout \
+                 | awk '($5=="DUP")' \
+                 | fgrep -w -e "{wildcards.sample}"  \
+                 | bedtools merge -i stdin -c 4 -o distinct) \
+          | sort -k1,1V -k2,2n \
+          | cat <(svtools vcf2bed {input.vcf} stdout | head -n1) - \
+          | fgrep -e "," -e "#chrom" \
+          > {output}
+        """
+
+rule get_merge_links:
+    input:
+        expand('batch_integration/depth/sample_merged/{sample}.bed',
+               sample=SAMPLES)
+    output:
+        'batch_integration/depth/merge_links/SSC.links'
+    shell:
+        """
+        cat {input} \
+          | sed -e '/^#chrom/d' \
+          | cut -f 4 \
+          | {config[scripts]}/make_link_combos.py \
+          | sort -u \
+          > {output}
+        """
+
+rule merge_depth_variants:
+    input:
+        vcf='batch_integration/depth/size_filtered/SSC.{chrom}.vcf.gz',
+        links='batch_integration/depth/merge_links/SSC.links'
+    output:
+        'batch_integration/depth/link_merged/SSC.{chrom}.vcf.gz'
+    shell:
+        """
+        {config[scripts]}/merge_linked_depth_calls.py {input.vcf} {input.links} stdout \
+          | vcf-sort -c \
+          | bgzip -c > {output}
+        """
+    
