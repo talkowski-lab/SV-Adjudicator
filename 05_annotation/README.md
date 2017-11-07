@@ -32,8 +32,8 @@ python scripts/get_canonical_transcripts.py \
 		gencode/gencode.canonical_transcripts.txt
 
 cat \
-    <(cut -f2 gencode/gencode.canonical_transcripts.txt | sed -e '1d' | fgrep -w -f - <(zcat annotation/annotation_gtf)) \
-    <(cut -f1 gencode/gencode.canonical_transcripts.txt | sed -e '1d' | fgrep -w -f - <(zcat annotation/annotation_gtf) | awk '($3=="gene")') \
+    <(cut -f2 gencode/gencode.canonical_transcripts.txt | sed -e '1d' | fgrep -w -f - <(zcat annotation/gencode.v19.annotation.gtf.gz)) \
+    <(cut -f1 gencode/gencode.canonical_transcripts.txt | sed -e '1d' | fgrep -w -f - <(zcat annotation/gencode.v19.annotation.gtf.gz) | awk '($3=="gene")') \
   | sort -k1,1V -k4,4n \
   | sed -e 's/^chr//' \
   | bgzip -c \
