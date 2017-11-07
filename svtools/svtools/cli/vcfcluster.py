@@ -73,6 +73,8 @@ def main(argv):
     parser.add_argument('filelist', type=argparse.FileType('r'),
                         help='List of paths to standardized VCFS')
     parser.add_argument('fout', help='Clustered VCF.')
+    parser.add_argument('source', help='Source algorithm. '
+                        '[delly,lumpy,manta,wham,melt]')
     parser.add_argument('-r', '--region', default=None,
                         help='Restrict clustering to genomic region.')
     parser.add_argument('-d', '--dist',
@@ -133,6 +135,7 @@ def main(argv):
             name = [args.prefix]
         else:
             name = ['SV']
+	name.append(args.source)
         if args.region:
             chrom = args.region.split(':')[0]
             name.append(chrom)
