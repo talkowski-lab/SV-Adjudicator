@@ -21,7 +21,7 @@ Result from previous step should be provided as input for this step.
 Annotated variants are reported in vcf format from this workflow.
 
 ## Manual process
-1a. produce gencode.canonical_annotation
+1. produce gencode.canonical_annotation
 
 ```
 python scripts/get_canonical_transcripts.py \
@@ -40,9 +40,6 @@ cat \
   > gencode/gencode.canonical_annotation.gtf.gz
 
 ```
-
-1b. produce 
-... ...
 
 2. annotate:
 ```
