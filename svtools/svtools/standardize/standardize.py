@@ -85,14 +85,16 @@ class VCFStandardizer:
         std_rec.pos = raw_rec.pos
         std_rec.id = raw_rec.id
         std_rec.ref = raw_rec.ref
+        std_rec.ref = 'N'
         std_rec.alts = raw_rec.alts
 
-        # Strip filters
         std_rec.filter.add('PASS')
 
         # Standardize the required INFO fields
         std_rec = self.standardize_info(std_rec, raw_rec)
+
         std_rec = self.standardize_alts(std_rec, raw_rec)
+
         std_rec = self.standardize_format(std_rec, raw_rec)
 
         return std_rec
@@ -121,7 +123,6 @@ class VCFStandardizer:
         std_rec.stop = raw_rec.pos + 1
         std_rec.info['SVLEN'] = 0
         std_rec.info['SOURCES'] = ['source']
-
         return std_rec
 
     def standardize_format(self, std_rec, raw_rec):
