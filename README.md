@@ -108,11 +108,9 @@ $ pip install git+git://github.com/daler/pybedtools.git@b1e0ce0
 The pipeline consists of multiple independent modules. Documentation of each
 module is provided in the respective subdirectory.
 
-0. [Preprocessing](preprocessing/README.md)
-   (optional, not intended for all users)
-1. [Algorithm integration](algorithm_integration/README.md)
-2. [RD-test](rdtest/README.md)
-3. SR-test
+0. [preprocessing](https://github.com/talkowski-lab/SV-Adjudicator/tree/master/00_preprocessing)
+1. [algorithm_integration](https://github.com/talkowski-lab/SV-Adjudicator/tree/master/01_algorithm_integration)
+2. [02_evidence_assessment](https://github.com/talkowski-lab/SV-Adjudicator/tree/master/02_evidence_assessment)
 
 ## Rolling your own preprocessing
 
@@ -123,11 +121,6 @@ be generalizable to all use cases.
 If you would like to implement your own preprocessing before beginning
 integration and filtering, the pipeline can be bootstrapped to begin with the
 integration module by providing the following input files:
-
-
-
-
-
 
 
 
