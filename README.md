@@ -111,6 +111,9 @@ module is provided in the respective subdirectory.
 0. [preprocessing](https://github.com/talkowski-lab/SV-Adjudicator/tree/master/00_preprocessing)
 1. [algorithm_integration](https://github.com/talkowski-lab/SV-Adjudicator/tree/master/01_algorithm_integration)
 2. [02_evidence_assessment](https://github.com/talkowski-lab/SV-Adjudicator/tree/master/02_evidence_assessment)
+3. [variant_filtering](https://github.com/talkowski-lab/SV-Adjudicator/tree/master/03_variant_filtering)
+4. [variant_resolution](https://github.com/talkowski-lab/SV-Adjudicator/tree/master/04_variant_resolution)
+5. [annotation](https://github.com/talkowski-lab/SV-Adjudicator/tree/master/05_annotation)
 
 ## Rolling your own preprocessing
 
