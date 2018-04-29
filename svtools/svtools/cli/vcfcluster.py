@@ -135,7 +135,7 @@ def main(argv):
             name = [args.prefix]
         else:
             name = ['SV']
-	name.append(args.source)
+        name.append(args.source)
         if args.region:
             chrom = args.region.split(':')[0]
             name.append(chrom)
